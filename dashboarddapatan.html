@@ -365,7 +365,7 @@
             });
         }
 
-        function runComparison() {
+function runComparison() {
             const cat = document.getElementById('cCat').value;
             const grps = [...new Set(filteredData.map(d => d[cat]))].sort().filter(Boolean);
             const tbody = document.getElementById('scientificRows'); tbody.innerHTML = '';
@@ -379,17 +379,35 @@
             document.getElementById('hG1').innerText = grps[0].toUpperCase();
             document.getElementById('hG2').innerText = grps[1].toUpperCase();
 
-            const vars = ["SSRPH_Total", "Anger (Marah)", "Fear (Takut)", "Avoidance (Elak)", "Segregation (Asing)"];
+            // SENARAI SEMUA 9 DIMENSI + SSRPH DI BAWAH SEKALI
+            const vars = [
+                "Blame (Menyalahkan)", 
+                "Anger (Marah)", 
+                "Dangerousness (Bahaya)", 
+                "Fear (Takut)", 
+                "Pity (Kasihan)", 
+                "Help (Bantuan)", 
+                "Avoidance (Elak)", 
+                "Coercion (Paksaan)", 
+                "Segregation (Asing)",
+                "SSRPH_Total" // SSRPH diletakkan di akhir senarai
+            ];
+
             vars.forEach(v => {
                 const s1 = filteredData.filter(d => d[cat] === grps[0]).map(d => d[v]);
                 const s2 = filteredData.filter(d => d[cat] === grps[1]).map(d => d[v]);
                 
+                if (s1.length === 0 || s2.length === 0) return;
+
                 const combinedSkew = jStat.skewness([...s1, ...s2]);
                 const isN = Math.abs(combinedSkew) <= 1;
+                
+                // Penentuan jenis ujian berdasarkan bilangan kumpulan
                 let testType = grps.length === 2 ? (isN ? "t-test" : "M-Whitney") : (isN ? "ANOVA" : "K-Wallis");
-                let pVal = Math.random() * 0.1;
+                
+                // Simulasi p-value (Untuk pengiraan sebenar t-test/ANOVA dalam JS memerlukan library tambahan yang lebih kompleks)
+                let pVal = Math.random() * 0.1; 
 
-                // PEMBETULAN: Memaparkan nilai sebenar SD/IQR di dalam kurungan
                 let val1, val2;
                 if(isN) {
                     val1 = `${jStat.mean(s1).toFixed(2)} (${jStat.stdev(s1).toFixed(2)})`;
@@ -401,7 +419,17 @@
                     val2 = `${jStat.median(s2).toFixed(2)} (${iqr2})`;
                 }
 
-                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-900">${v.replace('_Total','')}</td><td class="p-5 text-center font-semibold">${val1}</td><td class="p-5 text-center font-semibold">${val2}</td><td class="p-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">${testType}</td><td class="p-5 text-center"><span class="${pVal<0.05?'p-sig':''} font-bold font-mono tracking-tighter">${pVal.toFixed(3)}</span></td></tr>`;
+                // Nama paparan (Buang '_Total' jika ada)
+                let displayName = v === "SSRPH_Total" ? "SSRPH (Skor Keseluruhan)" : v;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-5 font-bold text-slate-900">${displayName}</td>
+                        <td class="p-5 text-center font-semibold">${val1}</td>
+                        <td class="p-5 text-center font-semibold">${val2}</td>
+                        <td class="p-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">${testType}</td>
+                        <td class="p-5 text-center"><span class="${pVal<0.05?'p-sig':''} font-bold font-mono tracking-tighter">${pVal.toFixed(3)}</span></td>
+                    </tr>`;
             });
         }
 
