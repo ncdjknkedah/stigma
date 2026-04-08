@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kajian Stigma Kesihatan Mental / Mental Health Stigma Survey</title>
+    <!-- Use Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #f0fdfa; /* calming light teal */
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            backdrop-filter: blur(5px);
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        h1, h2, h3 { color: #111827; }
+        .progress-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 999px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .step { display: none; animation: fadeIn 0.4s; }
+        .step.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-outline:hover { background-color: #eef2ff; }
+        .flex-between { display: flex; justify-content: space-between; }
+        
+        .radio-group { margin-bottom: 25px; }
+        .radio-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .options-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .options-row label {
+            font-weight: 400; background: white; padding: 10px 15px; border-radius: 8px;
+            border: 1px solid #d1d5db; cursor: pointer; transition: all 0.2s;
+        }
+        .options-row input[type="radio"] { display: none; }
+        .options-row input[type="radio"]:checked + span {
+            color: var(--primary); font-weight: bold;
+        }
+        .options-row label:has(input[type="radio"]:checked) {
+            border-color: var(--primary); background: #eef2ff;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;
+            box-sizing: border-box;
+        }
+        .vignette-box {
+            background: #f8fafc; border-left: 4px solid var(--primary); padding: 20px;
+            border-radius: 0 8px 8px 0; margin-bottom: 25px; font-style: italic; line-height: 1.6;
+        }
+        .scale-numbers { display: flex; justify-content: space-between; margin-top: 10px; background: white; border-radius: 8px; overflow: hidden; border: 1px solid #d1d5db; }
+        .scale-numbers label { flex: 1; text-align: center; padding: 12px 0; border-right: 1px solid #d1d5db; margin: 0; cursor: pointer; transition: 0.2s;}
+        .scale-numbers label:last-child { border-right: none; }
+        .scale-numbers label:hover { background: #f3f4f6; }
+        .scale-numbers input[type="radio"] { display: none; }
+        .scale-numbers label:has(input[type="radio"]:checked) { background: var(--primary); color: white; font-weight: bold; }
+        
+        .scale-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+        .question-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #e5e7eb; }
+        .bilingual-text { display: block; color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <form id="surveyForm">
+        <!-- STEP 1: CONSENT -->
+        <div class="step active" id="step1">
+            <h2>Penerangan & Persetujuan <br><span class="bilingual-text" style="font-size:18px;">Information & Consent</span></h2>
+            <p>Terima kasih kerana meluangkan masa. Kajian ini bertujuan untuk mengukur tahap stigma terhadap kesihatan mental dalam kalangan masyarakat. Segala maklumat yang anda kongsikan adalah <strong>SULIT</strong> dan hanya digunakan untuk <strong>tujuan kajian ini sahaja</strong>.</p>
+            <p class="bilingual-text">Thank you for your time. This study aims to measure the level of mental health stigma in the community. All information shared is <strong>CONFIDENTIAL</strong> and will only be used for <strong>this research purpose</strong>.</p>
+            
+            <div class="form-group" style="margin-top: 30px;">
+                <label style="font-weight:600;">Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree to continue with this survey?</label>
+                <div class="options-row" style="margin-top:10px;">
+                    <label><input type="radio" name="consent" value="Yes" required> <span>Ya / Yes</span></label>
+                    <label><input type="radio" name="consent" value="No"> <span>Tidak / No</span></label>
+                </div>
+            </div>
+            <div class="flex-between">
+                <div></div>
+                <button type="button" class="btn" onclick="nextStep(1)">Seterusnya / Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: DEMOGRAPHY -->
+        <div class="step" id="step2">
+            <h2>BAHAGIAN D: DEMOGRAFI <br><span class="bilingual-text" style="font-size:18px;">SECTION D: DEMOGRAPHY</span></h2>
+            
+            <div class="form-group">
+                <label>Jantina / Gender</label>
+                <select name="jantina" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Lelaki">Lelaki / Male</option>
+                    <option value="Perempuan">Perempuan / Female</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Umur / Age</label>
+                <input type="number" name="umur" class="form-control" required min="15" max="100">
+            </div>
+
+            <div class="form-group">
+                <label>Bangsa / Race</label>
+                <select name="bangsa" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Melayu">Melayu</option>
+                    <option value="Cina">Cina</option>
+                    <option value="India">India</option>
+                    <option value="Siam">Siam</option>
+                    <option value="Bukan Warganegara">Bukan Warganegara / Non-Citizen</option>
+                    <option value="Lain-lain">Lain-lain / Others</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Agama / Religion</label>
+                <select name="agama" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Islam">Islam</option>
+                    <option value="Kristian">Kristian</option>
+                    <option value="Buddha">Buddha</option>
+                    <option value="Hindu">Hindu</option>
+                    <option value="Lain-lain">Lain-lain / Others</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Tahap Pendidikan / Education Level</label>
+                <select name="pendidikan" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Tiada Pendidikan Formal">Tiada Pendidikan Formal</option>
+                    <option value="Sekolah Rendah">Sekolah Rendah</option>
+                    <option value="SPM">SPM</option>
+                    <option value="STPM">STPM</option>
+                    <option value="Sijil">Sijil</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Ijazah Sarjana Muda">Ijazah Sarjana Muda (Degree)</option>
+                    <option value="Ijazah Sarjana">Ijazah Sarjana (Master)</option>
+                    <option value="PhD">PhD</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Pekerjaan / Occupation</label>
+                <input type="text" name="pekerjaan" class="form-control" required>
+            </div>
+
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(2)">Kembali / Back</button>
+                <button type="button" class="btn" onclick="nextStep(2)">Seterusnya / Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: VIGNETTE -->
+        <div class="step" id="step3">
+            <h2>BAHAGIAN 1: SENARIO (VIGNETTE)</h2>
+            <p>Sila baca petikan di bawah dengan teliti sebelum menjawab soalan di Bahagian seterusnya.<br>
+            <span class="bilingual-text">Please read the following passage carefully before answering the questions in the next Section.</span></p>
+
+            <div class="vignette-box">
+                "Rosli adalah seorang lelaki berusia 30 tahun. Sejak kebelakangan ini, Rosli mula berkelakuan pelik. Dia sering mendengar suara-suara yang orang lain tidak dengar dan bercakap sendirian. Dia juga mendakwa bahawa dia mempunyai kuasa luar biasa dan sering merasa curiga bahawa orang di sekelilingnya mahu mencederakannya. Rosli tidak lagi menguruskan kebersihan dirinya dan jarang mandi. Dia telah didiagnosis menghidap Schizophrenia dan telah beberapa kali dimasukkan ke wad psikiatri."
+                <br><br>
+                <em>"Rosli is a 30-year-old man. Recently, Rosli has started to behave strangely. He often hears voices that others do not hear and talks to himself. He also claims to have extraordinary powers and is often suspicious that people around him want to harm him. Rosli no longer takes care of his personal hygiene and rarely bathes. He has been diagnosed with Schizophrenia and has been admitted to a psychiatric ward several times."</em>
+            </div>
+
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(3)">Kembali / Back</button>
+                <button type="button" class="btn" onclick="nextStep(3)">Seterusnya / Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: AQ-27 Part 1 -->
+        <div class="step" id="step4">
+            <h2>BAHAGIAN B: AQ-27 (SOAL SELIDIK ATRIBUSI) <br><span class="bilingual-text" style="font-size:18px;">SECTION B: AQ-27 (ATTRIBUTION QUESTIONNAIRE)</span></h2>
+            <p>Berdasarkan senario Rosli, sila berikan skor anda dari 1 (Sangat Tidak Setuju) hingga 9 (Sangat Setuju).<br>
+            <span class="bilingual-text">Based on the scenario of Rosli, please choose your score from 1 (Strongly Disagree) to 9 (Strongly Agree).</span></p>
+            
+            <div id="aqContainerPart1"></div>
+
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(4)">Kembali / Back</button>
+                <button type="button" class="btn" onclick="nextStep(4)">Seterusnya / Next</button>
+            </div>
+        </div>
+        
+        <!-- STEP 5: AQ-27 Part 2 -->
+        <div class="step" id="step5">
+            <h2>BAHAGIAN B: AQ-27 (Sesi Kedua)</h2>
+            <div id="aqContainerPart2"></div>
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(5)">Kembali / Back</button>
+                <button type="button" class="btn" onclick="nextStep(5)">Seterusnya / Next</button>
+            </div>
+        </div>
+
+        <!-- STEP 6: SSRPH -->
+        <div class="step" id="step6">
+            <h2>BAHAGIAN C: SSRPH (STIGMA MENCARI BANTUAN) <br><span class="bilingual-text" style="font-size:18px;">SECTION C: SSRPH</span></h2>
+            <p>Sila nyatakan tahap persetujuan anda bagi setiap kenyataan.<br>
+            <span class="bilingual-text">Please indicate your level of agreement for each statement.</span></p>
+            
+            <div class="scale-labels" style="margin-bottom:15px; font-weight:bold;">
+                <span>0 = Sangat Tidak Setuju (Strongly Disagree)</span>
+                <span>3 = Sangat Setuju (Strongly Agree)</span>
+            </div>
+
+            <div id="ssrphContainer"></div>
+
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(6)">Kembali / Back</button>
+                <button type="submit" class="btn" id="submitBtn">Hantar Soal Selidik / Submit Survey</button>
+            </div>
+        </div>
+
+        <!-- COMPLETION SCREEN -->
+        <div class="step" id="step7" style="text-align: center;">
+            <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+            <h2>Terima Kasih! / Thank You!</h2>
+            <p>Jawapan anda telah direkodkan dengan jayanya.</p>
+            <p class="bilingual-text">Your responses have been successfully recorded.</p>
+            <p style="margin-top:20px; color: var(--text-muted);">Data anda akan sangat membantu kajian ini.</p>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // Data setup
+    const aqQuestions = [
+        ["I would feel that Rosli is responsible for his condition.", "Saya rasa Rosli bertanggungjawab ke atas keadaannya."],
+        ["How angry would you feel at Rosli?", "Berapa banyak kemarahan yang anda rasa terhadap Rosli?"],
+        ["How dangerous would you feel Rosli is?", "Sejauh mana anda rasa Rosli adalah seorang yang berbahaya?"],
+        ["How much do you agree that Rosli would frighten you?", "Sejauh mana anda setuju bahawa Rosli menakutkan anda?"],
+        ["I would feel pity for Rosli.", "Saya merasa simpati/kesian terhadap Rosli."],
+        ["How likely is it that you would help Rosli?", "Sejauh mana kemungkinan anda sudi membantu Rosli?"],
+        ["How likely is it that you would try to stay away from Rosli?", "Sejauh mana kemungkinan anda akan cuba menjauhkan diri daripada Rosli?"],
+        ["I would think that Rosli should be forced into a psychiatric hospital.", "Saya rasa Rosli patut dipaksa untuk dimasukkan ke hospital psikiatri."],
+        ["Rosli should be forced to take his medication even if he doesn't want to.", "Rosli patut dipaksa untuk mengambil ubatnya walaupun dia tidak mahu."],
+        ["I would think that it is Rosli's own fault that he is in the present condition.", "Saya rasa ia adalah salah Rosli sendiri sehingga dia berada dalam keadaan sekarang."],
+        ["How aggravated would you feel by Rosli?", "Sejauh mana anda merasa rimas/jengkel dengan Rosli?"],
+        ["How much do you agree that Rosli is a threat to others?", "Sejauh mana anda setuju bahawa Rosli adalah ancaman kepada orang lain?"],
+        ["How unsafe would Rosli make you feel?", "Sejauh mana Rosli membuatkan anda merasa tidak selamat?"],
+        ["How much do you agree that you would feel concerned for Rosli?", "Sejauh mana anda setuju bahawa anda merasa bimbang terhadap Rosli?"],
+        ["If I were an employer, I would interview Rosli for a job.", "Jika saya seorang majikan, saya akan menemuduga Rosli untuk suatu pekerjaan."],
+        ["How certain are you that you would avoid Rosli?", "Sejauh mana anda pasti bahawa anda akan mengelak daripada Rosli?"],
+        ["I would think that Rosli’s community should provide him with a place to live.", "Saya rasa komuniti Rosli sepatutnya menyediakan tempat tinggal untuknya."],
+        ["I would think that Rosli should be forced to go to a treatment clinic.", "Saya rasa Rosli patut dipaksa untuk pergi ke klinik rawatan."],
+        ["How much do you think Rosli is to blame for his problems?", "Sejauh mana anda rasa Rosli patut dipersalahkan atas masalahnya?"],
+        ["I would feel irritated by Rosli.", "Saya akan merasa terganggu/marah dengan Rosli."],
+        ["How much do you agree that Rosli is a threat to himself?", "Sejauh mana anda setuju bahawa Rosli adalah ancaman kepada dirinya sendiri?"],
+        ["How terrified of Rosli would you feel?", "Sejauh mana anda merasa sangat takut dengan Rosli?"],
+        ["I would feel sympathetic towards Rosli.", "Saya merasa sangat simpati terhadap Rosli."],
+        ["How likely is it that you would lend Rosli money?", "Sejauh mana kemungkinan anda sudi meminjamkan wang kepada Rosli?"],
+        ["If I saw Rosli on the street, I would walk the other way.", "Jika saya nampak Rosli di jalanan, saya akan berjalan ke arah lain."],
+        ["How much do you think Rosli should be under the control of his family?", "Berapa banyakkah kawalan yang anda rasa perlu dikenakan oleh keluarganya ke atas Rosli?"],
+        ["How much do you think the authorities should intervene to force Rosli into treatment?", "Sejauh mana anda rasa pihak berkuasa perlu campur tangan untuk memaksa Rosli dirawat?"]
+    ];
+
+    const ssrQuestions = [
+        ["There is a negative association with the person's reputation if they get psychological treatment.", "Terdapat kesan negatif terhadap maruah seseorang jika mereka mendapatkan rawatan psikologi."],
+        ["It is quite embarrassing if people know that someone is getting professional help for their emotional problems.", "Adalah sangat memalukan jika orang tahu seseorang mendapatkan bantuan profesional untuk masalah emosinya."],
+        ["People will think that someone is less stable if they know they have seen a psychologist.", "Orang akan menganggap seseorang kurang stabil jika mereka tahu individu itu telah berjumpa pakar psikologi."],
+        ["Getting psychological help is a sign of personal failure.", "Mendapatkan bantuan psikologi adalah petanda kegagalan peribadi."],
+        ["I would feel like less of a person if people knew I was seeing a counselor or psychiatrist.", "Saya akan rasa rendah diri jika orang tahu saya berjumpa dengan kaunselor atau pakar psikiatri."]
+    ];
+
+    function renderScale(targetId, questions, prefix, startIdx, scaleRange) {
+        const container = document.getElementById(targetId);
+        let html = '';
+        questions.forEach((q, idx) => {
+            let realIdx = startIdx + idx + 1;
+            let name = prefix + realIdx;
+            let radios = '';
+            for(let i=scaleRange[0]; i<=scaleRange[1]; i++) {
+                radios += `<label><input type="radio" name="${name}" value="${i}" required><span>${i}</span></label>`;
+            }
+            
+            html += `
+            <div class="question-card">
+                <b>${realIdx}. ${q[1]}</b>
+                <span class="bilingual-text">${q[0]}</span>
+                <div class="scale-numbers">
+                    ${radios}
+                </div>
+                ${scaleRange[1] === 9 ? `
+                <div class="scale-labels">
+                    <span>1: Sangat Tidak Setuju (Strongly Disagree)</span>
+                    <span>9: Sangat Setuju (Strongly Agree)</span>
+                </div>` : ''}
+            </div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // Render questions
+    renderScale('aqContainerPart1', aqQuestions.slice(0, 14), 'aq', 0, [1,9]);
+    renderScale('aqContainerPart2', aqQuestions.slice(14), 'aq', 14, [1,9]);
+    renderScale('ssrphContainer', ssrQuestions, 'ssrph', 0, [0,3]);
+
+    // Navigation logic
+    let currentStep = 1;
+    const totalSteps = 6; // step 7 is success screen
+
+    function updateProgress() {
+        const percentage = ((currentStep - 1) / totalSteps) * 100;
+        document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    function validateStep(step) {
+        const stepEl = document.getElementById('step' + step);
+        const inputs = stepEl.querySelectorAll('input, select');
+        let valid = true;
+        inputs.forEach(input => {
+            if(!input.checkValidity()) {
+                input.reportValidity();
+                valid = false;
+            }
+        });
+        
+        // Consent check
+        if(step === 1 && valid) {
+            const consent = document.querySelector('input[name="consent"]:checked').value;
+            if(consent === "No") {
+                alert("Anda tidak bersetuju. Terima kasih kerana meluangkan masa.");
+                // block progression
+                return false;
+            }
+        }
+        return valid;
+    }
+
+    function nextStep(step) {
+        if(!validateStep(step)) return;
+        document.getElementById('step' + step).classList.remove('active');
+        currentStep++;
+        document.getElementById('step' + currentStep).classList.add('active');
+        updateProgress();
+        window.scrollTo(0,0);
+    }
+
+    function prevStep(step) {
+        document.getElementById('step' + step).classList.remove('active');
+        currentStep--;
+        document.getElementById('step' + currentStep).classList.add('active');
+        updateProgress();
+        window.scrollTo(0,0);
+    }
+
+    // Handle form submit
+    document.getElementById('surveyForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if(!validateStep(currentStep)) return;
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerText = "Menghantar... / Submitting...";
+        submitBtn.disabled = true;
+
+        const formData = new FormData(this);
+        const object = {};
+        formData.forEach((value, key) => object[key] = value);
+
+        // REPLACE THIS URL WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxITCBtn8Ct4zPAdhYwHrobhheoO8GIRCOwv3617y4OSkO_QDPhUNyKJ2GWLZKKigDRhQ/exec";
+
+        // Fallback for demo since we haven't deployed the script yet.
+        // Once deployed, use fetch to scriptURL
+        
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify(object),
+            headers: {
+                // Gunakan text/plain untuk elak masalah CORS dalam Google Apps Script
+                'Content-Type': 'text/plain;charset=utf-8',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Berjaya hantar:", data);
+            document.getElementById('step6').classList.remove('active');
+            currentStep = 7;
+            document.getElementById('step' + currentStep).classList.add('active');
+            document.getElementById('progressBar').style.width = '100%';
+        })
+        .catch(error => {
+            console.error("Ralat:", error);
+            alert("Berlaku ralat ketika menghantar data. Sila semak console.");
+            submitBtn.innerText = "Hantar Soal Selidik / Submit Survey";
+            submitBtn.disabled = false;
+        });
+    });
+</script>
+</body>
+</html>
