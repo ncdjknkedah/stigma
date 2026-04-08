@@ -3,212 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Dashboard Stigma AQ-27 & SSRPH</title>
+    <title>Sistem Dashboard Analisis Stigma Mental Terintegrasi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
     <style>
-        .loading { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .skew-normal { color: #059669; font-weight: bold; }
+        .skew-error { color: #dc2626; font-weight: bold; }
+        .highlight-stat { background-color: #f0f7ff; border: 1px solid #3b82f6; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-slate-50 font-sans text-slate-800">
 
-    <div id="loader" class="loading text-xl font-bold text-blue-600">
-        Sedang memuatkan data real-time...
-    </div>
-
-    <div id="mainContent" class="container mx-auto p-6 hidden">
-        <header class="mb-8 flex justify-between items-center">
+    <header class="bg-indigo-900 text-white p-6 shadow-xl mb-8">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-3xl font-bold text-blue-900">Dashboard Stigma Real-Time</h1>
-                <p class="text-gray-500">Data dikemaskini secara automatik daripada Google Sheets</p>
+                <h1 class="text-2xl font-black tracking-tight">STIGMA-ANALYTICS 2.0</h1>
+                <p class="text-indigo-200 text-sm italic">Analisis Real-Time AQ-27 & SSRPH</p>
             </div>
-            <div class="text-right">
-                <button onclick="fetchData()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">Refresh Data</button>
+            <div class="flex items-center gap-4 text-sm bg-indigo-800 p-3 rounded-lg border border-indigo-700">
+                <span>Status: <span class="text-green-400 font-bold">Live Data</span></span>
+                <span class="opacity-50">|</span>
+                <span id="updateTime">Memuatkan...</span>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex gap-4 items-center">
-            <span class="font-medium">Filter Kumpulan:</span>
-            <select id="groupFilter" onchange="updateDashboard()" class="border rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="All">Semua Responden</option>
-            </select>
+    <div class="container mx-auto px-4 pb-20">
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">1. Tapisan Data Demografi</h2>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600">Jantina</label>
+                    <select id="fJantina" onchange="updateDashboard()" class="w-full p-2 bg-slate-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><option value="All">Semua Jantina</option></select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600">Bangsa</label>
+                    <select id="fBangsa" onchange="updateDashboard()" class="w-full p-2 bg-slate-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><option value="All">Semua Bangsa</option></select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600">Agama</label>
+                    <select id="fAgama" onchange="updateDashboard()" class="w-full p-2 bg-slate-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><option value="All">Semua Agama</option></select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600">Pendidikan</label>
+                    <select id="fPendidikan" onchange="updateDashboard()" class="w-full p-2 bg-slate-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><option value="All">Semua Tahap</option></select>
+                </div>
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-slate-600">Pekerjaan</label>
+                    <select id="fPekerjaan" onchange="updateDashboard()" class="w-full p-2 bg-slate-50 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"><option value="All">Semua Pekerjaan</option></select>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                <p class="text-xs text-gray-400 uppercase font-bold">Total Responden</p>
-                <h2 id="totalResponden" class="text-3xl font-bold text-gray-800">0</h2>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-indigo-500">
+                <p class="text-xs font-bold text-slate-400">JUMLAH SAMPEL (N)</p>
+                <h3 id="sampleCount" class="text-3xl font-black text-slate-800">0</h3>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                <p class="text-xs text-gray-400 uppercase font-bold">Min Skor SSRPH</p>
-                <h2 id="avgSSRPH" class="text-3xl font-bold text-gray-800">0</h2>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-emerald-500">
+                <p class="text-xs font-bold text-slate-400">KORELASI PEARSON (r)</p>
+                <h3 id="pearsonVal" class="text-3xl font-black text-emerald-600">0.00</h3>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
-                <p class="text-xs text-gray-400 uppercase font-bold">Korelasi (r)</p>
-                <h2 id="pearsonVal" class="text-3xl font-bold text-gray-800">0</h2>
+            <div class="bg-indigo-900 p-6 rounded-2xl shadow-lg text-white md:col-span-2">
+                <h4 class="text-xs font-bold opacity-70 mb-2">✨ ULASAN AUTOMATIK (SINTESIS DATA)</h4>
+                <p id="aiComment" class="text-sm leading-relaxed italic">Menunggu data untuk dianalisis...</p>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
-                <p class="text-xs text-gray-400 uppercase font-bold">Ujian Normaliti</p>
-                <h2 id="normalityStatus" class="text-sm font-bold text-gray-800 pt-2">-</h2>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+            <div class="bg-slate-50 p-4 border-b flex justify-between items-center">
+                <h2 class="font-bold text-slate-700 uppercase text-sm">2. Analisis Dimensi AQ-27 (Mean of Means)</h2>
+                <span class="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold italic">NOTA: Kolum biru adalah statistik yang disyorkan berdasarkan Normaliti</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 text-xs">
+                            <th class="p-4">Dimensi</th>
+                            <th class="p-4 text-center">Skewness</th>
+                            <th class="p-4">Mean (SD)</th>
+                            <th class="p-4">Median (IQR)</th>
+                            <th class="p-4">Interpretasi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aqTableBody" class="divide-y"></tbody>
+                </table>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="font-bold text-gray-700 mb-4">Demografi Jantina</h3>
-                <canvas id="demoChart" height="200"></canvas>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-sm font-bold text-slate-700 uppercase mb-6 border-b pb-2">3. Analisis SSRPH (Skor 0-15)</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div id="ssrphMeanBox" class="p-4 rounded-xl border text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Mean (SD)</p>
+                        <h4 id="ssrphMeanText" class="text-xl font-black">0.00</h4>
+                    </div>
+                    <div id="ssrphMedBox" class="p-4 rounded-xl border text-center">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Median (IQR)</p>
+                        <h4 id="ssrphMedText" class="text-xl font-black">0.00</h4>
+                    </div>
+                </div>
+                <canvas id="ssrphChart" height="200"></canvas>
             </div>
-            <div class="bg-white p-6 rounded-xl shadow-sm">
-                <h3 class="font-bold text-gray-700 mb-4">Lengkung Normaliti (SSRPH)</h3>
-                <canvas id="ssrphDistChart" height="200"></canvas>
-            </div>
-        </div>
 
-        <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-            <div class="p-4 bg-gray-50 border-b font-bold text-gray-700 text-lg">Analisis Dimensi AQ-27</div>
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-100 text-xs uppercase text-gray-600">
-                        <th class="p-4 border-b">Dimensi</th>
-                        <th class="p-4 border-b">Mean (SD)</th>
-                        <th class="p-4 border-b">Median (IQR)</th>
-                        <th class="p-4 border-b">Impak Stigma</th>
-                    </tr>
-                </thead>
-                <tbody id="aqTableBody" class="text-sm"></tbody>
-            </table>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-sm font-bold text-slate-700 uppercase mb-6 border-b pb-2">4. Mod Perbandingan Cepat</h2>
+                <div class="flex gap-2 mb-6">
+                    <select id="compCategory" class="flex-1 p-2 bg-slate-50 border rounded-lg text-sm">
+                        <option value="Jantina">Jantina</option>
+                        <option value="Bangsa">Bangsa</option>
+                        <option value="Pekerjaan">Pekerjaan</option>
+                    </select>
+                    <button onclick="runComparison()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700">Banding</button>
+                </div>
+                <div id="compResult" class="space-y-3 max-h-[250px] overflow-y-auto pr-2">
+                    <p class="text-slate-400 text-sm italic text-center py-10">Pilih kategori dan tekan banding.</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // MASUKKAN URL CSV ANDA DI SINI
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSMHjY26JQvkLp9SPlRlxfbvo7MpbHojD503rT9xar_1KE0VufDtVElmW4Z04TSyQdymxSl4bLJn7O/pub?output=csv';
+        // === KONFIGURASI ===
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSMHjY26JQvkLp9SPlRlxfbvo7MpbHojD503rT9xar_1KE0VufDtVElmW4Z04TSyQdymxSl4bLJn7O/pub?output=csv'; 
         
-        let rawData = [];
-        let filteredData = [];
-        let myChart1, myChart2;
-
-        const aqDimensions = {
+        const aqDims = {
             "Blame": [1, 10, 19], "Anger": [2, 11, 20], "Dangerousness": [3, 12, 21],
             "Fear": [4, 13, 22], "Pity": [5, 14, 23], "Help": [6, 17, 24],
             "Avoidance": [7, 16, 25], "Coercion": [8, 9, 18], "Segregation": [15, 26, 27]
         };
 
-        async function fetchData() {
+        let rawData = [];
+        let ssrphChartRef = null;
+
+        async function init() {
             try {
                 const response = await fetch(sheetUrl);
-                const csvText = await response.text();
-                Papa.parse(csvText, {
-                    header: true,
-                    dynamicTyping: true,
-                    complete: function(results) {
-                        rawData = results.data.filter(d => d.Umur || d.Timestamp);
-                        initDashboard();
+                const csv = await response.text();
+                Papa.parse(csv, {
+                    header: true, dynamicTyping: true, skipEmptyLines: true,
+                    complete: (res) => {
+                        rawData = res.data;
+                        buildDropdowns();
+                        updateDashboard();
+                        document.getElementById('updateTime').innerText = `Terakhir: ${new Date().toLocaleTimeString()}`;
                     }
                 });
-            } catch (error) {
-                alert("Ralat memuatkan data. Sila pastikan link 'Publish to Web' adalah betul.");
-            }
+            } catch (e) { alert("Ralat sambungan Google Sheets."); }
         }
 
-        function initDashboard() {
-            const filter = document.getElementById('groupFilter');
-            const groups = [...new Set(rawData.map(d => d.Kumpulan || d.Pekerjaan))].filter(Boolean);
-            filter.innerHTML = '<option value="All">Semua Responden</option>';
-            groups.forEach(g => filter.innerHTML += `<option value="${g}">${g}</option>`);
-            
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('mainContent').classList.remove('hidden');
-            updateDashboard();
+        function buildDropdowns() {
+            const keys = ['Jantina', 'Bangsa', 'Agama', 'Pendidikan', 'Pekerjaan'];
+            keys.forEach(k => {
+                const el = document.getElementById('f' + k);
+                const options = [...new Set(rawData.map(d => d[k]))].filter(Boolean);
+                options.forEach(o => el.innerHTML += `<option value="${o}">${o}</option>`);
+            });
         }
 
         function updateDashboard() {
-            const group = document.getElementById('groupFilter').value;
-            filteredData = group === "All" ? rawData : rawData.filter(d => (d.Kumpulan || d.Pekerjaan) === group);
-            
-            runCalculations();
-            renderCharts();
+            const filtered = rawData.filter(d => {
+                return (document.getElementById('fJantina').value === 'All' || d.Jantina === document.getElementById('fJantina').value) &&
+                       (document.getElementById('fBangsa').value === 'All' || d.Bangsa === document.getElementById('fBangsa').value) &&
+                       (document.getElementById('fAgama').value === 'All' || d.Agama === document.getElementById('fAgama').value) &&
+                       (document.getElementById('fPendidikan').value === 'All' || d.Pendidikan === document.getElementById('fPendidikan').value) &&
+                       (document.getElementById('fPekerjaan').value === 'All' || d.Pekerjaan === document.getElementById('fPekerjaan').value);
+            });
+
+            document.getElementById('sampleCount').innerText = filtered.length;
+            if(filtered.length === 0) return;
+
+            processAQ(filtered);
+            processSSRPH(filtered);
+            generateAIComment(filtered);
         }
 
-        function runCalculations() {
-            document.getElementById('totalResponden').innerText = filteredData.length;
-            
-            // SSRPH Total & Normaliti
-            const ssrphList = filteredData.map(d => (d.SSRPH1+d.SSRPH2+d.SSRPH3+d.SSRPH4+d.SSRPH5) || 0);
-            const meanSSRPH = jStat.mean(ssrphList).toFixed(2);
-            const skew = jStat.skewness(ssrphList).toFixed(2);
-            
-            document.getElementById('avgSSRPH').innerText = meanSSRPH;
-            document.getElementById('normalityStatus').innerHTML = `Skewness: ${skew}<br>${Math.abs(skew) < 1 ? '✅ Taburan Normal' : '⚠️ Tidak Normal'}`;
-
-            // AQ-27 & Korelasi
-            const aqTotals = filteredData.map(d => {
-                let sum = 0;
-                for(let i=1; i<=27; i++) {
-                    let v = d['AQ'+i] || 0;
-                    if(i === 15 || i === 24) v = 10 - v; // Reverse scoring
-                    sum += v;
-                }
-                return sum;
-            });
-            
-            const r = jStat.corrcoeff(aqTotals, ssrphList).toFixed(3);
-            document.getElementById('pearsonVal').innerText = r;
-
-            // Render AQ Table
+        function processAQ(data) {
             const tbody = document.getElementById('aqTableBody');
             tbody.innerHTML = '';
-            Object.keys(aqDimensions).forEach(dim => {
-                const dimScores = filteredData.map(d => {
+            let allAQTotal = [];
+            let allSSRPHSum = [];
+
+            Object.keys(aqDims).forEach(dim => {
+                const dimMeans = data.map(d => {
                     let sum = 0;
-                    aqDimensions[dim].forEach(q => {
+                    aqDims[dim].forEach(q => {
                         let v = d['AQ'+q] || 0;
-                        if(q === 15 || q === 24) v = 10 - v;
+                        if(q === 15 || q === 24) v = 10 - v; // Reverse
                         sum += v;
                     });
                     return sum / 3;
                 });
-                
-                const m = jStat.mean(dimScores).toFixed(2);
-                const sd = jStat.stdev(dimScores).toFixed(2);
-                const med = jStat.median(dimScores).toFixed(2);
-                const iqr = (jStat.quartiles(dimScores)[2] - jStat.quartiles(dimScores)[0]).toFixed(2);
-                
+
+                const skew = jStat.skewness(dimMeans);
+                const mean = jStat.mean(dimMeans).toFixed(2);
+                const sd = jStat.stdev(dimMeans).toFixed(2);
+                const med = jStat.median(dimMeans).toFixed(2);
+                const q = jStat.quartiles(dimMeans);
+                const iqr = (q[2] - q[0]).toFixed(2);
+                const isNormal = Math.abs(skew) <= 1;
+
+                let interpretation = (mean > 5) ? 'Tinggi' : 'Rendah';
+                if(dim === "Pity" || dim === "Help") interpretation = (mean > 5) ? 'Positif' : 'Negatif';
+
                 tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-4 border-b font-medium">${dim}</td>
-                        <td class="p-4 border-b">${m} (${sd})</td>
-                        <td class="p-4 border-b">${med} (${iqr})</td>
-                        <td class="p-4 border-b"><span class="${m > 5 ? 'text-red-500' : 'text-green-500'} font-bold">${m > 5 ? 'Tinggi' : 'Rendah'}</span></td>
-                    </tr>`;
+                    <tr>
+                        <td class="p-4 font-bold text-slate-700">${dim}</td>
+                        <td class="p-4 text-center ${isNormal ? 'skew-normal' : 'skew-error'}">${skew.toFixed(2)}</td>
+                        <td class="p-4 ${isNormal ? 'highlight-stat font-bold' : ''}">${mean} (${sd})</td>
+                        <td class="p-4 ${!isNormal ? 'highlight-stat font-bold' : ''}">${med} (${iqr})</td>
+                        <td class="p-4 font-bold text-xs uppercase">${interpretation}</td>
+                    </tr>
+                `;
             });
+
+            // Pearson
+            data.forEach(d => {
+                let s = 0; for(let i=1; i<=27; i++) { let v=d['AQ'+i]||0; if(i===15||i===24) v=10-v; s+=v; }
+                allAQTotal.push(s);
+                allSSRPHSum.push((d.SSRPH1+d.SSRPH2+d.SSRPH3+d.SSRPH4+d.SSRPH5)||0);
+            });
+            document.getElementById('pearsonVal').innerText = jStat.corrcoeff(allAQTotal, allSSRPHSum).toFixed(3);
         }
 
-        function renderCharts() {
-            const ctx1 = document.getElementById('demoChart').getContext('2d');
-            if(myChart1) myChart1.destroy();
-            const genCounts = {};
-            filteredData.forEach(d => genCounts[d.Jantina] = (genCounts[d.Jantina] || 0) + 1);
-            myChart1 = new Chart(ctx1, {
-                type: 'doughnut',
-                data: { labels: Object.keys(genCounts), datasets: [{ data: Object.values(genCounts), backgroundColor: ['#3B82F6', '#F472B6'] }] }
-            });
+        function processSSRPH(data) {
+            const scores = data.map(d => (d.SSRPH1+d.SSRPH2+d.SSRPH3+d.SSRPH4+d.SSRPH5) || 0);
+            const mean = jStat.mean(scores);
+            const skew = jStat.skewness(scores);
+            const isNormal = Math.abs(skew) <= 1;
 
-            const ctx2 = document.getElementById('ssrphDistChart').getContext('2d');
-            if(myChart2) myChart2.destroy();
-            const ssrphScores = filteredData.map(d => (d.SSRPH1+d.SSRPH2+d.SSRPH3+d.SSRPH4+d.SSRPH5) || 0);
-            myChart2 = new Chart(ctx2, {
+            document.getElementById('ssrphMeanText').innerText = `${mean.toFixed(2)} (${jStat.stdev(scores).toFixed(2)})`;
+            document.getElementById('ssrphMedText').innerText = `${jStat.median(scores).toFixed(2)} (${(jStat.quartiles(scores)[2]-jStat.quartiles(scores)[0]).toFixed(2)})`;
+
+            document.getElementById('ssrphMeanBox').className = isNormal ? 'p-4 rounded-xl border text-center highlight-stat' : 'p-4 rounded-xl border text-center';
+            document.getElementById('ssrphMedBox').className = !isNormal ? 'p-4 rounded-xl border text-center highlight-stat' : 'p-4 rounded-xl border text-center';
+
+            renderChart(scores);
+        }
+
+        function renderChart(scores) {
+            const ctx = document.getElementById('ssrphChart').getContext('2d');
+            if(ssrphChartRef) ssrphChartRef.destroy();
+            const counts = Array.from({length: 16}, (_, i) => scores.filter(s => s === i).length);
+            ssrphChartRef = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: Array.from({length: 16}, (_, i) => i),
-                    datasets: [{ label: 'Kekerapan Skor', data: Array.from({length: 16}, (_, i) => ssrphScores.filter(s => s === i).length), backgroundColor: '#10B981' }]
-                }
+                    datasets: [{ label: 'Bil Responden', data: counts, backgroundColor: '#6366f1', borderRadius: 4 }]
+                },
+                options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
         }
 
-        fetchData();
+        function generateAIComment(data) {
+            const r = document.getElementById('pearsonVal').innerText;
+            const meanSSRPH = jStat.mean(data.map(d => (d.SSRPH1+d.SSRPH2+d.SSRPH3+d.SSRPH4+d.SSRPH5)||0));
+            
+            let txt = `Analisis terhadap <b>${data.length} responden</b> menunjukkan korelasi Pearson <b>r=${r}</b>. `;
+            if(r > 0.4) txt += `Ini menunjukkan hubungan yang signifikan: individu dengan stigma tinggi terhadap orang lain cenderung mempunyai stigma diri yang tinggi untuk mencari bantuan. `;
+            else txt += `Hubungan antara stigma luar dan stigma diri adalah lemah, menunjukkan faktor peribadi lain mungkin lebih dominan. `;
+            
+            txt += `Tahap SSRPH purata (${meanSSRPH.toFixed(1)}/15) menunjukkan masyarakat berada pada tahap <b>${meanSSRPH > 10 ? 'KRITIKAL' : (meanSSRPH > 5 ? 'SEDERHANA' : 'RENDAH')}</b>.`;
+            document.getElementById('aiComment').innerHTML = txt;
+        }
+
+        function runComparison() {
+            const cat = document.getElementById('compCategory').value;
+            const groups = [...new Set(rawData.map(d => d[cat]))].filter(Boolean);
+            const res = document.getElementById('compResult');
+            res.innerHTML = '';
+
+            groups.forEach(g => {
+                const sub = rawData.filter(d => d[cat] === g);
+                const m = jStat.mean(sub.map(d => (d.SSRPH1+d.SSRPH2+d.SSRPH3+d.SSRPH4+d.SSRPH5)||0)).toFixed(2);
+                res.innerHTML += `
+                    <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                        <span class="text-xs font-bold text-slate-600 truncate mr-2">${g}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-black text-indigo-700">${m}</span>
+                            <span class="text-[10px] text-slate-400">n=${sub.length}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        init();
     </script>
 </body>
 </html>
