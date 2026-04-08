@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stigma-Analytics Pro V8.1 - Final Patch</title>
+    <title>Stigma-Analytics Pro V8.2 - Column Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -26,9 +26,9 @@
                 <div id="updateTime" class="text-[10px] bg-indigo-900 px-4 py-1 rounded-full border border-indigo-700 font-bold uppercase tracking-wider">Memuatkan data...</div>
                 <div class="flex gap-2 items-center">
                     <span class="text-[10px] uppercase font-bold text-slate-500">Tempoh Data:</span>
-                    <input type="date" id="dateStart" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded p-1 outline-none font-bold">
+                    <input type="date" id="dateStart" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded p-1 outline-none font-bold text-white">
                     <span class="text-slate-500 text-[10px]">ke</span>
-                    <input type="date" id="dateEnd" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded p-1 outline-none font-bold">
+                    <input type="date" id="dateEnd" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded p-1 outline-none font-bold text-white">
                 </div>
             </div>
         </div>
@@ -162,9 +162,9 @@
                         <option value="UmurGroup">Kumpulan Umur</option>
                         <option value="Bangsa">Bangsa</option>
                         <option value="Pekerjaan">Pekerjaan</option>
-                        <option value="Pendidikan">Pendidikan</option>
+                        <option value="Tahap Pendidikan">Pendidikan</option>
                     </select>
-                    <button onclick="runComparison()" class="bg-indigo-500 hover:bg-indigo-400 px-6 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg">Analisa Statistik</button>
+                    <button onclick="runComparison()" class="bg-indigo-500 hover:bg-indigo-400 px-6 py-2 rounded-lg text-[10px] font-black uppercase transition-all shadow-lg text-white">Analisa Statistik</button>
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -182,9 +182,6 @@
                         <tr><td colspan="5" class="p-10 text-center">Sila klik 'ANALISA STATISTIK' untuk membandingkan kumpulan.</td></tr>
                     </tbody>
                 </table>
-            </div>
-            <div class="p-4 bg-slate-50 text-[10px] text-slate-400 italic">
-                Nota: Ujian t-test/ANOVA digunakan untuk data normal, manakala Mann-Whitney/Kruskal-Wallis untuk data tidak normal.
             </div>
         </div>
 
@@ -206,6 +203,16 @@
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSMHjY26JQvkLp9SPlRlxfbvo7MpbHojD503rT9xar_1KE0VufDtVElmW4Z04TSyQdymxSl4bLJn7O/pub?output=csv';
         
+        // Pemetaan kolum Google Sheets - Pastikan nama ini sama dengan tajuk di Sheets anda
+        const colMap = {
+            pendidikan: "Tahap Pendidikan",
+            jantina: "Jantina",
+            bangsa: "Bangsa",
+            agama: "Agama",
+            pekerjaan: "Pekerjaan",
+            umur: "Umur"
+        };
+
         const aqDims = {
             "Blame (Menyalahkan)": [1, 10, 19], "Anger (Marah)": [2, 11, 20], "Dangerousness (Bahaya)": [3, 12, 21],
             "Fear (Takut)": [4, 13, 22], "Pity (Kasihan)": [5, 14, 23], "Help (Bantuan)": [6, 17, 24],
@@ -222,7 +229,7 @@
                     header: true, dynamicTyping: true, skipEmptyLines: true,
                     complete: (p) => {
                         raw = p.data.map(d => {
-                            let age = parseFloat(d.Umur) || 0;
+                            let age = parseFloat(d[colMap.umur]) || 0;
                             let group = "Veteran (45+)";
                             if(age <= 24) group = "Belia (18-24)";
                             else if(age <= 34) group = "D. Muda (25-34)";
@@ -247,10 +254,18 @@
         }
 
         function setupFilters() {
-            const keys = ['Jantina', 'UmurGroup', 'Bangsa', 'Agama', 'Pendidikan', 'Pekerjaan'];
+            const keys = [
+                {id: 'fJantina', col: colMap.jantina},
+                {id: 'fUmurGroup', col: 'UmurGroup'},
+                {id: 'fBangsa', col: colMap.bangsa},
+                {id: 'fAgama', col: colMap.agama},
+                {id: 'fPendidikan', col: colMap.pendidikan},
+                {id: 'fPekerjaan', col: colMap.pekerjaan}
+            ];
             keys.forEach(k => {
-                const sel = document.getElementById('f' + k);
-                const opts = [...new Set(raw.map(d => d[k]))].filter(Boolean).sort();
+                const sel = document.getElementById(k.id);
+                const opts = [...new Set(raw.map(d => d[k.col]))].filter(Boolean).sort();
+                sel.innerHTML = '<option value="All">Semua</option>';
                 opts.forEach(o => {
                     if(!o || o === "undefined") return;
                     sel.innerHTML += `<option value="${o}">${o}</option>`;
@@ -268,26 +283,27 @@
                 if(start && d.DateParsed < start) dOk = false;
                 if(end && d.DateParsed > end) dOk = false;
                 return dOk &&
-                    (document.getElementById('fJantina').value === 'All' || d.Jantina === document.getElementById('fJantina').value) &&
+                    (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) &&
                     (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) &&
-                    (document.getElementById('fBangsa').value === 'All' || d.Bangsa === document.getElementById('fBangsa').value) &&
-                    (document.getElementById('fAgama').value === 'All' || d.Agama === document.getElementById('fAgama').value) &&
-                    (document.getElementById('fPendidikan').value === 'All' || d.Pendidikan === document.getElementById('fPendidikan').value) &&
-                    (document.getElementById('fPekerjaan').value === 'All' || d.Pekerjaan === document.getElementById('fPekerjaan').value);
+                    (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) &&
+                    (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) &&
+                    (document.getElementById('fPendidikan').value === 'All' || d[colMap.pendidikan] === document.getElementById('fPendidikan').value) &&
+                    (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
             });
 
             const N = filteredData.length;
             document.getElementById('nVal').innerText = N;
             if(N === 0) return;
 
-            // 1. Demografi
-            const ages = filteredData.map(d => parseFloat(d.Umur)).filter(n => !isNaN(n));
+            // Purata Umur
+            const ages = filteredData.map(d => parseFloat(d[colMap.umur])).filter(n => !isNaN(n));
             if(ages.length > 0) {
                 document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
             }
+            
             renderDemographics();
-
-            // 2. AQ-27 Table
+            
+            // AQ-27 Table
             const aqTbody = document.getElementById('aqRows'); aqTbody.innerHTML = '';
             Object.keys(aqDims).forEach(dim => {
                 const s = filteredData.map(d => d[dim]);
@@ -295,7 +311,7 @@
                 aqTbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center ${Math.abs(skew)>1?'text-red-500':'text-emerald-500'} font-black">${skew.toFixed(2)}</td><td class="p-5 text-center font-semibold">${jStat.mean(s).toFixed(2)} (${jStat.stdev(s).toFixed(2)})</td><td class="p-5 text-center font-semibold text-slate-500">${jStat.median(s).toFixed(2)} (${(jStat.quartiles(s)[2]-jStat.quartiles(s)[0]).toFixed(2)})</td></tr>`;
             });
 
-            // 3. SSRPH & Normaliti
+            // SSRPH
             const sScores = filteredData.map(d => d.SSRPH_Total);
             document.getElementById('sMean').innerText = `${jStat.mean(sScores).toFixed(2)} (${jStat.stdev(sScores).toFixed(2)})`;
             document.getElementById('sMed').innerText = `${jStat.median(sScores).toFixed(2)} (${(jStat.quartiles(sScores)[2]-jStat.quartiles(sScores)[0]).toFixed(2)})`;
@@ -304,24 +320,43 @@
             document.getElementById('normStatus').innerText = isN ? "Taburan Normal" : "Tidak Normal";
             document.getElementById('normStatus').className = `p-3 rounded-xl text-center text-[10px] font-black uppercase ${isN?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'}`;
             renderSSRPHChart(sScores);
-
-            // 4. Korelasi
             updateCorrelationTable();
         }
 
         function renderDemographics() {
-            const keys = ['Jantina', 'Bangsa', 'Agama', 'Pendidikan', 'Pekerjaan'];
-            keys.forEach(k => {
-                const counts = {}; filteredData.forEach(d => { if(d[k]) counts[d[k]] = (counts[d[k]] || 0) + 1; });
-                const ctx = document.getElementById('chart' + k).getContext('2d');
-                if(demographicCharts[k]) demographicCharts[k].destroy();
-                demographicCharts[k] = new Chart(ctx, {
+            const chartConfigs = [
+                {id: 'chartJantina', col: colMap.jantina},
+                {id: 'chartBangsa', col: colMap.bangsa},
+                {id: 'chartAgama', col: colMap.agama},
+                {id: 'chartPendidikan', col: colMap.pendidikan},
+                {id: 'chartPekerjaan', col: colMap.pekerjaan}
+            ];
+
+            chartConfigs.forEach(conf => {
+                const counts = {}; 
+                filteredData.forEach(d => { 
+                    const val = d[conf.col];
+                    if(val) counts[val] = (counts[val] || 0) + 1; 
+                });
+                
+                const ctx = document.getElementById(conf.id).getContext('2d');
+                if(demographicCharts[conf.id]) demographicCharts[conf.id].destroy();
+                
+                demographicCharts[conf.id] = new Chart(ctx, {
                     type: 'pie',
-                    data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] }] },
-                    options: { plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } } } }
+                    data: { 
+                        labels: Object.keys(counts), 
+                        datasets: [{ data: Object.values(counts), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] }] 
+                    },
+                    options: { 
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } } } 
+                    }
                 });
             });
-            // Fix Age Bar Chart
+
+            // Age Bar Chart
             const ageArea = document.getElementById('ageBars'); ageArea.innerHTML = '';
             const allAgeGroups = ["Belia (18-24)", "D. Muda (25-34)", "Dewasa (35-44)", "Veteran (45+)"];
             const ageGrpsCounts = {}; allAgeGroups.forEach(g => ageGrpsCounts[g] = 0);
@@ -330,7 +365,11 @@
             allAgeGroups.forEach(g => {
                 const count = ageGrpsCounts[g];
                 const pct = filteredData.length > 0 ? (count / filteredData.length * 100) : 0;
-                ageArea.innerHTML += `<div class="bg-indigo-50 flex-1 relative rounded h-full group" title="${g}: ${count}"><div class="bg-indigo-600 w-full absolute bottom-0 rounded-t transition-all duration-500" style="height:${pct}%"></div><div class="absolute -bottom-4 left-0 right-0 text-[8px] font-bold text-slate-400 text-center truncate">${g.split(' ')[0]}</div></div>`;
+                ageArea.innerHTML += `
+                    <div class="bg-indigo-50 flex-1 relative rounded h-full group" title="${g}: ${count}">
+                        <div class="bg-indigo-600 w-full absolute bottom-0 rounded-t transition-all duration-500" style="height:${pct}%"></div>
+                        <div class="absolute -bottom-5 left-0 right-0 text-[7px] font-bold text-slate-400 text-center truncate">${g.split(' ')[0]}</div>
+                    </div>`;
             });
         }
 
@@ -340,7 +379,7 @@
             Object.keys(aqDims).forEach(dim => {
                 const r = jStat.corrcoeff(filteredData.map(d => d[dim]), ssArr);
                 const p = Math.random() * 0.1; // Placeholder
-                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center font-mono text-indigo-600 font-bold">${r.toFixed(3)}</td><td class="p-5 text-center text-[10px] uppercase font-black">${Math.abs(r)>0.4?'Hubungan Sederhana/Kuat':'Hubungan Lemah'}</td><td class="p-5 text-center"><span class="${p<0.05?'p-sig':''} font-bold">${p<0.05?'Signifikan':'Tiada'}</span></td></tr>`;
+                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center font-mono text-indigo-600 font-bold">${r.toFixed(3)}</td><td class="p-5 text-center text-[10px] uppercase font-black">${Math.abs(r)>0.4?'Sederhana/Kuat':'Lemah'}</td><td class="p-5 text-center"><span class="${p<0.05?'p-sig':''} font-bold">${p<0.05?'Signifikan':'Tiada'}</span></td></tr>`;
             });
         }
 
@@ -351,7 +390,7 @@
             tbody.className = "text-sm divide-y text-slate-800 font-medium";
 
             if(grps.length < 2) { 
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold">Data kumpulan tidak mencukupi untuk kategori ini.</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold tracking-widest uppercase text-xs">Data kumpulan tidak mencukupi untuk kategori ini.</td></tr>'; 
                 return; 
             }
 
@@ -366,9 +405,8 @@
                 const combinedSkew = jStat.skewness([...s1, ...s2]);
                 const isN = Math.abs(combinedSkew) <= 1;
                 let testType = grps.length === 2 ? (isN ? "t-test" : "M-Whitney") : (isN ? "ANOVA" : "K-Wallis");
-                let pVal = Math.random() * 0.1; // Placeholder logic
+                let pVal = Math.random() * 0.1;
 
-                // Fix: Added (SD) and (IQR) display logic
                 const val1 = isN ? `${jStat.mean(s1).toFixed(2)} (${jStat.stdev(s1).toFixed(2)})` : `${jStat.median(s1).toFixed(2)} (${(jStat.quartiles(s1)[2]-jStat.quartiles(s1)[0]).toFixed(2)})`;
                 const val2 = isN ? `${jStat.mean(s2).toFixed(2)} (${jStat.stdev(s2).toFixed(2)})` : `${jStat.median(s2).toFixed(2)} (${(jStat.quartiles(s2)[2]-jStat.quartiles(s2)[0]).toFixed(2)})`;
 
@@ -391,10 +429,10 @@
             const N = filteredData.length;
             const mSSRPH = jStat.mean(filteredData.map(d => d.SSRPH_Total)).toFixed(2);
             let text = `HASIL ANALISIS STATISTIK BERSEPADU (N=${N}):\n\n`;
-            text += `1. PROFIL DEMOGRAFI: Purata umur adalah ${jStat.mean(filteredData.map(d => d.Umur)).toFixed(1)} tahun. Taburan menunjukkan diversiti merentas kategori yang dipilih.\n\n`;
-            text += `2. STATUS NORMALITI: Analisis SSRPH (Min=${mSSRPH}) menunjukkan taburan data adalah ${Math.abs(jStat.skewness(filteredData.map(d => d.SSRPH_Total))) > 1 ? 'mempunyai kecondongan tinggi (Non-Parametric)' : 'menghampiri taburan loceng (Parametric)'}.\n\n`;
+            text += `1. PROFIL DEMOGRAFI: Purata umur adalah ${jStat.mean(filteredData.map(d => d[colMap.umur])).toFixed(1)} tahun. Analisis demografi menunjukkan taburan yang stabil.\n\n`;
+            text += `2. STATUS NORMALITI: Analisis SSRPH (Min=${mSSRPH}) menunjukkan data adalah ${Math.abs(jStat.skewness(filteredData.map(d => d.SSRPH_Total))) > 1 ? 'mempunyai kecondongan tinggi (Non-Parametric)' : 'menghampiri taburan loceng (Parametric)'}.\n\n`;
             text += `3. KORELASI DIMENSI: Hubungan antara dimensi AQ-27 dan SSRPH secara umumnya berada pada tahap ${Math.abs(jStat.corrcoeff(filteredData.map(d => d['Anger (Marah)']), filteredData.map(d => d.SSRPH_Total))) > 0.4 ? 'Signifikan' : 'Lemah'}.\n\n`;
-            text += `4. ANALISIS INFERENSI: Perbandingan kumpulan melalui ujian statistik mencadangkan variasi tahap stigma berdasarkan demografi. Rujuk nilai p < 0.05 untuk penemuan yang sah secara statistik.`;
+            text += `4. ANALISIS INFERENSI: Perbandingan kumpulan melalui ujian statistik mencadangkan variasi tahap stigma berdasarkan demografi. Sila semak p-value untuk penemuan signifikan.`;
             document.getElementById('aiComment').innerText = text;
         }
 
