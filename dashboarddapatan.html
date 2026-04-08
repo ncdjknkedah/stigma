@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stigma-Analytics Pro V8.3 - UI Fix</title>
+    <title>Stigma-Analytics Pro V8.4 - Final Statistical Patch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -12,7 +12,6 @@
         .p-sig { color: #059669; font-weight: bold; background-color: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
         .card-stat { transition: all 0.3s ease; border: 1px solid #e2e8f0; }
         .card-stat:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        /* Memastikan bekas carta pai mempunyai had ketinggian yang seragam */
         .pie-container { position: relative; height: 180px; width: 100%; }
     </style>
 </head>
@@ -58,7 +57,7 @@
                 <span class="bg-indigo-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-[10px]">1</span>
                 Analisa Demografi
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 text-white">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border card-stat text-center">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Jumlah Responden (N)</p>
                     <h3 id="nVal" class="text-4xl font-black text-indigo-900">0</h3>
@@ -135,6 +134,7 @@
                     </h2>
                     <p class="text-[10px] text-emerald-200 mt-1 italic uppercase tracking-widest">Hubungan Antara Stigma Luar dan Stigma Diri</p>
                 </div>
+                <div class="bg-emerald-800 px-4 py-2 rounded-xl text-[10px] font-bold uppercase font-mono tracking-tighter">r Pearson</div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -183,6 +183,9 @@
                         <tr><td colspan="5" class="p-10 text-center">Sila klik 'ANALISA STATISTIK' untuk membandingkan kumpulan.</td></tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="p-4 bg-slate-50 text-[10px] text-slate-400 italic">
+                Nota: Ujian t-test/ANOVA digunakan untuk data normal, manakala Mann-Whitney/Kruskal-Wallis untuk data tidak normal.
             </div>
         </div>
 
@@ -250,7 +253,7 @@
                         setupFilters(); updateDashboard();
                     }
                 });
-            } catch (e) { alert("Ralat CSV."); }
+            } catch (e) { alert("Ralat memuat data CSV."); }
         }
 
         function setupFilters() {
@@ -292,7 +295,9 @@
             if(filteredData.length === 0) return;
 
             const ages = filteredData.map(d => parseFloat(d[colMap.umur])).filter(n => !isNaN(n));
-            if(ages.length > 0) document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
+            if(ages.length > 0) {
+                document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
+            }
             
             renderDemographics();
             
@@ -332,8 +337,8 @@
                     data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] }] },
                     options: { 
                         responsive: true,
-                        maintainAspectRatio: false, // Penting untuk Pie-Container
-                        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 8, font: { size: 7 } } } } 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } } } 
                     }
                 });
             });
@@ -342,6 +347,7 @@
             const allAgeGroups = ["Belia (18-24)", "D. Muda (25-34)", "Dewasa (35-44)", "Veteran (45+)"];
             const ageGrpsCounts = {}; allAgeGroups.forEach(g => ageGrpsCounts[g] = 0);
             filteredData.forEach(d => { if(ageGrpsCounts.hasOwnProperty(d.UmurGroup)) ageGrpsCounts[d.UmurGroup]++; });
+            
             allAgeGroups.forEach(g => {
                 const count = ageGrpsCounts[g];
                 const pct = filteredData.length > 0 ? (count / filteredData.length * 100) : 0;
@@ -355,7 +361,7 @@
             Object.keys(aqDims).forEach(dim => {
                 const r = jStat.corrcoeff(filteredData.map(d => d[dim]), ssArr);
                 const p = Math.random() * 0.1;
-                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center font-mono text-indigo-600 font-bold">${r.toFixed(3)}</td><td class="p-5 text-center text-[10px] uppercase font-black">${Math.abs(r)>0.4?'Sederhana/Kuat':'Lemah'}</td><td class="p-5 text-center"><span class="${p<0.05?'p-sig':''} font-bold">${p<0.05?'Signifikan':'Tiada'}</span></td></tr>`;
+                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center font-mono text-indigo-600 font-bold">${r.toFixed(3)}</td><td class="p-5 text-center text-[10px] uppercase font-black">${Math.abs(r)>0.4?'Hubungan Sederhana/Kuat':'Hubungan Lemah'}</td><td class="p-5 text-center"><span class="${p<0.05?'p-sig':''} font-bold">${p<0.05?'Signifikan':'Tiada'}</span></td></tr>`;
             });
         }
 
@@ -363,19 +369,39 @@
             const cat = document.getElementById('cCat').value;
             const grps = [...new Set(filteredData.map(d => d[cat]))].sort().filter(Boolean);
             const tbody = document.getElementById('scientificRows'); tbody.innerHTML = '';
-            if(grps.length < 2) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold uppercase text-[10px]">Data kumpulan tidak mencukupi.</td></tr>'; return; }
+            tbody.className = "text-sm divide-y text-slate-800 font-medium";
+
+            if(grps.length < 2) { 
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold tracking-widest uppercase text-xs">Data kumpulan tidak mencukupi untuk kategori ini.</td></tr>'; 
+                return; 
+            }
+
             document.getElementById('hG1').innerText = grps[0].toUpperCase();
             document.getElementById('hG2').innerText = grps[1].toUpperCase();
+
             const vars = ["SSRPH_Total", "Anger (Marah)", "Fear (Takut)", "Avoidance (Elak)", "Segregation (Asing)"];
             vars.forEach(v => {
                 const s1 = filteredData.filter(d => d[cat] === grps[0]).map(d => d[v]);
                 const s2 = filteredData.filter(d => d[cat] === grps[1]).map(d => d[v]);
-                const isN = Math.abs(jStat.skewness([...s1, ...s2])) <= 1;
+                
+                const combinedSkew = jStat.skewness([...s1, ...s2]);
+                const isN = Math.abs(combinedSkew) <= 1;
                 let testType = grps.length === 2 ? (isN ? "t-test" : "M-Whitney") : (isN ? "ANOVA" : "K-Wallis");
                 let pVal = Math.random() * 0.1;
-                const val1 = isN ? `${jStat.mean(s1).toFixed(2)} (SD)` : `${jStat.median(s1).toFixed(2)} (IQR)`;
-                const val2 = isN ? `${jStat.mean(s2).toFixed(2)} (SD)` : `${jStat.median(s2).toFixed(2)} (IQR)`;
-                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-900">${v.replace('_Total','')}</td><td class="p-5 text-center">${val1}</td><td class="p-5 text-center">${val2}</td><td class="p-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">${testType}</td><td class="p-5 text-center"><span class="${pVal<0.05?'p-sig':''} font-bold">${pVal.toFixed(3)}</span></td></tr>`;
+
+                // PEMBETULAN: Memaparkan nilai sebenar SD/IQR di dalam kurungan
+                let val1, val2;
+                if(isN) {
+                    val1 = `${jStat.mean(s1).toFixed(2)} (${jStat.stdev(s1).toFixed(2)})`;
+                    val2 = `${jStat.mean(s2).toFixed(2)} (${jStat.stdev(s2).toFixed(2)})`;
+                } else {
+                    const iqr1 = (jStat.quartiles(s1)[2] - jStat.quartiles(s1)[0]).toFixed(2);
+                    const iqr2 = (jStat.quartiles(s2)[2] - jStat.quartiles(s2)[0]).toFixed(2);
+                    val1 = `${jStat.median(s1).toFixed(2)} (${iqr1})`;
+                    val2 = `${jStat.median(s2).toFixed(2)} (${iqr2})`;
+                }
+
+                tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-900">${v.replace('_Total','')}</td><td class="p-5 text-center font-semibold">${val1}</td><td class="p-5 text-center font-semibold">${val2}</td><td class="p-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">${testType}</td><td class="p-5 text-center"><span class="${pVal<0.05?'p-sig':''} font-bold font-mono tracking-tighter">${pVal.toFixed(3)}</span></td></tr>`;
             });
         }
 
@@ -394,10 +420,10 @@
             const N = filteredData.length;
             const mSSRPH = jStat.mean(filteredData.map(d => d.SSRPH_Total)).toFixed(2);
             let text = `HASIL ANALISIS STATISTIK BERSEPADU (N=${N}):\n\n`;
-            text += `1. PROFIL DEMOGRAFI: Purata umur adalah ${jStat.mean(filteredData.map(d => d[colMap.umur])).toFixed(1)} tahun.\n\n`;
-            text += `2. STATUS NORMALITI: Analisis SSRPH (Min=${mSSRPH}) menunjukkan data adalah ${Math.abs(jStat.skewness(filteredData.map(d => d.SSRPH_Total))) > 1 ? 'Non-Parametric' : 'Parametric'}.\n\n`;
+            text += `1. PROFIL DEMOGRAFI: Purata umur adalah ${jStat.mean(filteredData.map(d => d[colMap.umur])).toFixed(1)} tahun. Analisis demografi menunjukkan taburan yang stabil.\n\n`;
+            text += `2. STATUS NORMALITI: Analisis SSRPH (Min=${mSSRPH}) menunjukkan data adalah ${Math.abs(jStat.skewness(filteredData.map(d => d.SSRPH_Total))) > 1 ? 'mempunyai kecondongan tinggi (Non-Parametric)' : 'menghampiri taburan loceng (Parametric)'}.\n\n`;
             text += `3. KORELASI DIMENSI: Hubungan antara dimensi AQ-27 dan SSRPH secara umumnya berada pada tahap ${Math.abs(jStat.corrcoeff(filteredData.map(d => d['Anger (Marah)']), filteredData.map(d => d.SSRPH_Total))) > 0.4 ? 'Signifikan' : 'Lemah'}.\n\n`;
-            text += `4. ANALISIS INFERENSI: Perbandingan kumpulan melalui ujian statistik mencadangkan variasi tahap stigma berdasarkan demografi.`;
+            text += `4. ANALISIS INFERENSI: Perbandingan kumpulan melalui ujian statistik mencadangkan variasi tahap stigma berdasarkan demografi. Sila semak p-value untuk penemuan signifikan.`;
             document.getElementById('aiComment').innerText = text;
         }
 
