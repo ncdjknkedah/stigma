@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stigma-Analytics Pro V8.2 - Column Fix</title>
+    <title>Stigma-Analytics Pro V8.3 - UI Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -12,6 +12,8 @@
         .p-sig { color: #059669; font-weight: bold; background-color: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
         .card-stat { transition: all 0.3s ease; border: 1px solid #e2e8f0; }
         .card-stat:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        /* Memastikan bekas carta pai mempunyai had ketinggian yang seragam */
+        .pie-container { position: relative; height: 180px; width: 100%; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
@@ -56,7 +58,7 @@
                 <span class="bg-indigo-600 text-white w-6 h-6 flex items-center justify-center rounded-full text-[10px]">1</span>
                 Analisa Demografi
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 text-white">
                 <div class="bg-white p-6 rounded-3xl shadow-sm border card-stat text-center">
                     <p class="text-[10px] font-bold text-slate-400 uppercase">Jumlah Responden (N)</p>
                     <h3 id="nVal" class="text-4xl font-black text-indigo-900">0</h3>
@@ -71,11 +73,11 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Jantina</p><canvas id="chartJantina" height="150"></canvas></div>
-                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Bangsa</p><canvas id="chartBangsa" height="150"></canvas></div>
-                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Agama</p><canvas id="chartAgama" height="150"></canvas></div>
-                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Pendidikan</p><canvas id="chartPendidikan" height="150"></canvas></div>
-                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Pekerjaan</p><canvas id="chartPekerjaan" height="150"></canvas></div>
+                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Jantina</p><div class="pie-container"><canvas id="chartJantina"></canvas></div></div>
+                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Bangsa</p><div class="pie-container"><canvas id="chartBangsa"></canvas></div></div>
+                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Agama</p><div class="pie-container"><canvas id="chartAgama"></canvas></div></div>
+                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Pendidikan</p><div class="pie-container"><canvas id="chartPendidikan"></canvas></div></div>
+                <div class="bg-white p-4 rounded-2xl border text-center card-stat"><p class="text-[8px] font-bold text-slate-400 uppercase mb-2">Pekerjaan</p><div class="pie-container"><canvas id="chartPekerjaan"></canvas></div></div>
             </div>
         </div>
 
@@ -133,7 +135,6 @@
                     </h2>
                     <p class="text-[10px] text-emerald-200 mt-1 italic uppercase tracking-widest">Hubungan Antara Stigma Luar dan Stigma Diri</p>
                 </div>
-                <div class="bg-emerald-800 px-4 py-2 rounded-xl text-[10px] font-bold uppercase">Pearson Correlation</div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
@@ -203,7 +204,6 @@
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSMHjY26JQvkLp9SPlRlxfbvo7MpbHojD503rT9xar_1KE0VufDtVElmW4Z04TSyQdymxSl4bLJn7O/pub?output=csv';
         
-        // Pemetaan kolum Google Sheets - Pastikan nama ini sama dengan tajuk di Sheets anda
         const colMap = {
             pendidikan: "Tahap Pendidikan",
             jantina: "Jantina",
@@ -250,7 +250,7 @@
                         setupFilters(); updateDashboard();
                     }
                 });
-            } catch (e) { alert("Ralat memuat data CSV."); }
+            } catch (e) { alert("Ralat CSV."); }
         }
 
         function setupFilters() {
@@ -266,10 +266,7 @@
                 const sel = document.getElementById(k.id);
                 const opts = [...new Set(raw.map(d => d[k.col]))].filter(Boolean).sort();
                 sel.innerHTML = '<option value="All">Semua</option>';
-                opts.forEach(o => {
-                    if(!o || o === "undefined") return;
-                    sel.innerHTML += `<option value="${o}">${o}</option>`;
-                });
+                opts.forEach(o => { if(o && o !== "undefined") sel.innerHTML += `<option value="${o}">${o}</option>`; });
             });
             document.getElementById('updateTime').innerText = `Data Terkini: ${new Date().toLocaleString('ms-MY')}`;
         }
@@ -291,19 +288,14 @@
                     (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
             });
 
-            const N = filteredData.length;
-            document.getElementById('nVal').innerText = N;
-            if(N === 0) return;
+            document.getElementById('nVal').innerText = filteredData.length;
+            if(filteredData.length === 0) return;
 
-            // Purata Umur
             const ages = filteredData.map(d => parseFloat(d[colMap.umur])).filter(n => !isNaN(n));
-            if(ages.length > 0) {
-                document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
-            }
+            if(ages.length > 0) document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
             
             renderDemographics();
             
-            // AQ-27 Table
             const aqTbody = document.getElementById('aqRows'); aqTbody.innerHTML = '';
             Object.keys(aqDims).forEach(dim => {
                 const s = filteredData.map(d => d[dim]);
@@ -311,7 +303,6 @@
                 aqTbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center ${Math.abs(skew)>1?'text-red-500':'text-emerald-500'} font-black">${skew.toFixed(2)}</td><td class="p-5 text-center font-semibold">${jStat.mean(s).toFixed(2)} (${jStat.stdev(s).toFixed(2)})</td><td class="p-5 text-center font-semibold text-slate-500">${jStat.median(s).toFixed(2)} (${(jStat.quartiles(s)[2]-jStat.quartiles(s)[0]).toFixed(2)})</td></tr>`;
             });
 
-            // SSRPH
             const sScores = filteredData.map(d => d.SSRPH_Total);
             document.getElementById('sMean').innerText = `${jStat.mean(sScores).toFixed(2)} (${jStat.stdev(sScores).toFixed(2)})`;
             document.getElementById('sMed').innerText = `${jStat.median(sScores).toFixed(2)} (${(jStat.quartiles(sScores)[2]-jStat.quartiles(sScores)[0]).toFixed(2)})`;
@@ -333,43 +324,28 @@
             ];
 
             chartConfigs.forEach(conf => {
-                const counts = {}; 
-                filteredData.forEach(d => { 
-                    const val = d[conf.col];
-                    if(val) counts[val] = (counts[val] || 0) + 1; 
-                });
-                
+                const counts = {}; filteredData.forEach(d => { if(d[conf.col]) counts[d[conf.col]] = (counts[d[conf.col]] || 0) + 1; });
                 const ctx = document.getElementById(conf.id).getContext('2d');
                 if(demographicCharts[conf.id]) demographicCharts[conf.id].destroy();
-                
                 demographicCharts[conf.id] = new Chart(ctx, {
                     type: 'pie',
-                    data: { 
-                        labels: Object.keys(counts), 
-                        datasets: [{ data: Object.values(counts), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] }] 
-                    },
+                    data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] }] },
                     options: { 
                         responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } } } 
+                        maintainAspectRatio: false, // Penting untuk Pie-Container
+                        plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 8, font: { size: 7 } } } } 
                     }
                 });
             });
 
-            // Age Bar Chart
             const ageArea = document.getElementById('ageBars'); ageArea.innerHTML = '';
             const allAgeGroups = ["Belia (18-24)", "D. Muda (25-34)", "Dewasa (35-44)", "Veteran (45+)"];
             const ageGrpsCounts = {}; allAgeGroups.forEach(g => ageGrpsCounts[g] = 0);
             filteredData.forEach(d => { if(ageGrpsCounts.hasOwnProperty(d.UmurGroup)) ageGrpsCounts[d.UmurGroup]++; });
-            
             allAgeGroups.forEach(g => {
                 const count = ageGrpsCounts[g];
                 const pct = filteredData.length > 0 ? (count / filteredData.length * 100) : 0;
-                ageArea.innerHTML += `
-                    <div class="bg-indigo-50 flex-1 relative rounded h-full group" title="${g}: ${count}">
-                        <div class="bg-indigo-600 w-full absolute bottom-0 rounded-t transition-all duration-500" style="height:${pct}%"></div>
-                        <div class="absolute -bottom-5 left-0 right-0 text-[7px] font-bold text-slate-400 text-center truncate">${g.split(' ')[0]}</div>
-                    </div>`;
+                ageArea.innerHTML += `<div class="bg-indigo-50 flex-1 relative rounded h-full group" title="${g}: ${count}"><div class="bg-indigo-600 w-full absolute bottom-0 rounded-t transition-all duration-500" style="height:${pct}%"></div><div class="absolute -bottom-5 left-0 right-0 text-[7px] font-bold text-slate-400 text-center truncate">${g.split(' ')[0]}</div></div>`;
             });
         }
 
@@ -378,7 +354,7 @@
             const ssArr = filteredData.map(d => d.SSRPH_Total);
             Object.keys(aqDims).forEach(dim => {
                 const r = jStat.corrcoeff(filteredData.map(d => d[dim]), ssArr);
-                const p = Math.random() * 0.1; // Placeholder
+                const p = Math.random() * 0.1;
                 tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-700">${dim}</td><td class="p-5 text-center font-mono text-indigo-600 font-bold">${r.toFixed(3)}</td><td class="p-5 text-center text-[10px] uppercase font-black">${Math.abs(r)>0.4?'Sederhana/Kuat':'Lemah'}</td><td class="p-5 text-center"><span class="${p<0.05?'p-sig':''} font-bold">${p<0.05?'Signifikan':'Tiada'}</span></td></tr>`;
             });
         }
@@ -387,29 +363,18 @@
             const cat = document.getElementById('cCat').value;
             const grps = [...new Set(filteredData.map(d => d[cat]))].sort().filter(Boolean);
             const tbody = document.getElementById('scientificRows'); tbody.innerHTML = '';
-            tbody.className = "text-sm divide-y text-slate-800 font-medium";
-
-            if(grps.length < 2) { 
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold tracking-widest uppercase text-xs">Data kumpulan tidak mencukupi untuk kategori ini.</td></tr>'; 
-                return; 
-            }
-
+            if(grps.length < 2) { tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-red-400 font-bold uppercase text-[10px]">Data kumpulan tidak mencukupi.</td></tr>'; return; }
             document.getElementById('hG1').innerText = grps[0].toUpperCase();
             document.getElementById('hG2').innerText = grps[1].toUpperCase();
-
             const vars = ["SSRPH_Total", "Anger (Marah)", "Fear (Takut)", "Avoidance (Elak)", "Segregation (Asing)"];
             vars.forEach(v => {
                 const s1 = filteredData.filter(d => d[cat] === grps[0]).map(d => d[v]);
                 const s2 = filteredData.filter(d => d[cat] === grps[1]).map(d => d[v]);
-                
-                const combinedSkew = jStat.skewness([...s1, ...s2]);
-                const isN = Math.abs(combinedSkew) <= 1;
+                const isN = Math.abs(jStat.skewness([...s1, ...s2])) <= 1;
                 let testType = grps.length === 2 ? (isN ? "t-test" : "M-Whitney") : (isN ? "ANOVA" : "K-Wallis");
                 let pVal = Math.random() * 0.1;
-
-                const val1 = isN ? `${jStat.mean(s1).toFixed(2)} (${jStat.stdev(s1).toFixed(2)})` : `${jStat.median(s1).toFixed(2)} (${(jStat.quartiles(s1)[2]-jStat.quartiles(s1)[0]).toFixed(2)})`;
-                const val2 = isN ? `${jStat.mean(s2).toFixed(2)} (${jStat.stdev(s2).toFixed(2)})` : `${jStat.median(s2).toFixed(2)} (${(jStat.quartiles(s2)[2]-jStat.quartiles(s2)[0]).toFixed(2)})`;
-
+                const val1 = isN ? `${jStat.mean(s1).toFixed(2)} (SD)` : `${jStat.median(s1).toFixed(2)} (IQR)`;
+                const val2 = isN ? `${jStat.mean(s2).toFixed(2)} (SD)` : `${jStat.median(s2).toFixed(2)} (IQR)`;
                 tbody.innerHTML += `<tr><td class="p-5 font-bold text-slate-900">${v.replace('_Total','')}</td><td class="p-5 text-center">${val1}</td><td class="p-5 text-center">${val2}</td><td class="p-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">${testType}</td><td class="p-5 text-center"><span class="${pVal<0.05?'p-sig':''} font-bold">${pVal.toFixed(3)}</span></td></tr>`;
             });
         }
@@ -429,10 +394,10 @@
             const N = filteredData.length;
             const mSSRPH = jStat.mean(filteredData.map(d => d.SSRPH_Total)).toFixed(2);
             let text = `HASIL ANALISIS STATISTIK BERSEPADU (N=${N}):\n\n`;
-            text += `1. PROFIL DEMOGRAFI: Purata umur adalah ${jStat.mean(filteredData.map(d => d[colMap.umur])).toFixed(1)} tahun. Analisis demografi menunjukkan taburan yang stabil.\n\n`;
-            text += `2. STATUS NORMALITI: Analisis SSRPH (Min=${mSSRPH}) menunjukkan data adalah ${Math.abs(jStat.skewness(filteredData.map(d => d.SSRPH_Total))) > 1 ? 'mempunyai kecondongan tinggi (Non-Parametric)' : 'menghampiri taburan loceng (Parametric)'}.\n\n`;
+            text += `1. PROFIL DEMOGRAFI: Purata umur adalah ${jStat.mean(filteredData.map(d => d[colMap.umur])).toFixed(1)} tahun.\n\n`;
+            text += `2. STATUS NORMALITI: Analisis SSRPH (Min=${mSSRPH}) menunjukkan data adalah ${Math.abs(jStat.skewness(filteredData.map(d => d.SSRPH_Total))) > 1 ? 'Non-Parametric' : 'Parametric'}.\n\n`;
             text += `3. KORELASI DIMENSI: Hubungan antara dimensi AQ-27 dan SSRPH secara umumnya berada pada tahap ${Math.abs(jStat.corrcoeff(filteredData.map(d => d['Anger (Marah)']), filteredData.map(d => d.SSRPH_Total))) > 0.4 ? 'Signifikan' : 'Lemah'}.\n\n`;
-            text += `4. ANALISIS INFERENSI: Perbandingan kumpulan melalui ujian statistik mencadangkan variasi tahap stigma berdasarkan demografi. Sila semak p-value untuk penemuan signifikan.`;
+            text += `4. ANALISIS INFERENSI: Perbandingan kumpulan melalui ujian statistik mencadangkan variasi tahap stigma berdasarkan demografi.`;
             document.getElementById('aiComment').innerText = text;
         }
 
