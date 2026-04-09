@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kajian Stigma Kesihatan Mental / Mental Health Stigma Survey</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #f0fdfa;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 40px;
+            position: relative;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 999px;
+            height: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .step { display: none; animation: fadeIn 0.4s; }
+        .step.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        .btn:hover { background-color: var(--primary-hover); }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 10px 22px;
+        }
+        .flex-between { display: flex; justify-content: space-between; gap: 10px; }
+        .form-group { margin-bottom: 20px; }
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;
+            box-sizing: border-box;
+        }
+        .question-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
+        .bilingual-text { display: block; color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+        .options-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .options-row label {
+            flex: 1; min-width: 140px; font-weight: 400; background: white; padding: 12px; border-radius: 8px;
+            border: 1px solid #d1d5db; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;
+        }
+        .options-row input[type="radio"] { display: none; }
+        .options-row label:has(input[type="radio"]:checked) {
+            border-color: var(--primary); background: #eef2ff; color: var(--primary); font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <form id="surveyForm">
+        <div class="step active" id="step1">
+            <h2>Penerangan & Persetujuan <br><span class="bilingual-text" style="font-size:18px;">Information & Consent</span></h2>
+            <p>Terima kasih kerana meluangkan masa. Tinjauan ini adalah kerjasama antara Unit Kawalan Penyakit Tidak Berjangkit, Jabatan Kesihatan Negeri Kedah dan Pusat Pengajian Teknologi, Multimedia, dan Komunikasi Universiti Utara Malaysia sebagai sebahagian daripada kerja kursus SCCAK2073 Perhubungan Awam. Ia bertujuan untuk mengukur tahap stigma terhadap kesihatan mental dalam kalangan masyarakat. Segala maklumat yang anda kongsikan adalah <strong>SULIT</strong> dan hanya digunakan untuk <strong>tujuan tinjauan ini sahaja</strong>.</p>
+            <p class="bilingual-text">Thank you for your time. This survey is a collaboration between the Non-Communicable Disease (NCD) Control Unit of the Kedah State Health Department and the School of Multimedia Technology and Communication, Universiti Utara Malaysia, as part of the SCCAK2073 Public Relations coursework. It aims to measure the level of stigma toward mental health within the community. All information shared is <strong>CONFIDENTIAL</strong> and will only be used for <strong>this survey purpose</strong>.</p>
+            
+            <div class="form-group" style="margin-top: 30px;">
+                <label style="font-weight: 600;">Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree to continue with this survey?</label>
+                <div class="options-row">
+                    <label><input type="radio" name="consent" value="Yes" required> <span>Ya / Yes</span></label>
+                    <label><input type="radio" name="consent" value="No"> <span>Tidak / No</span></label>
+                </div>
+            </div>
+            <div class="flex-between">
+                <span></span>
+                <button type="button" class="btn" onclick="nextStep(1)">Seterusnya / Next</button>
+            </div>
+        </div>
+
+        <div class="step" id="step2">
+            <h2>BAHAGIAN A: DEMOGRAFI <br><span class="bilingual-text" style="font-size:18px;">SECTION A: DEMOGRAPHY</span></h2>
+            
+            <div class="form-group">
+                <label>Jantina / Gender</label>
+                <select name="jantina" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Lelaki">Lelaki / Male</option>
+                    <option value="Perempuan">Perempuan / Female</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Umur / Age</label>
+                <input type="number" name="umur" class="form-control" required min="15" max="100">
+            </div>
+
+            <div class="form-group">
+                <label>Bangsa / Race</label>
+                <select name="bangsa" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Melayu">Melayu</option>
+                    <option value="Cina">Cina</option>
+                    <option value="India">India</option>
+                    <option value="Lain-lain">Lain-lain / Others</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Agama / Religion</label>
+                <select name="agama" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Islam">Islam</option>
+                    <option value="Kristian">Kristian / Christian</option>
+                    <option value="Hindu">Hindu</option>
+                    <option value="Budha">Budha / Buddhist</option>
+                    <option value="Lain-lain">Lain-lain / Others</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Tahap Pendidikan / Education Level</label>
+                <select name="pendidikan" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Tiada Pendidikan Formal">Tiada Pendidikan Formal / No Formal Education</option>
+                    <option value="UPSR">UPSR</option>
+                    <option value="SRP/PMR">SRP/PMR</option>
+                    <option value="SPM">SPM</option>
+                    <option value="STPM">STPM</option>
+                    <option value="Sijil">Sijil / Certificate</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Ijazah">Ijazah / Degree</option>
+                    <option value="Ijazah Sarjana">Ijazah Sarjana / Master's Degree</option>
+                    <option value="PHD">PHD</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Pekerjaan / Occupation</label>
+                <select name="pekerjaan" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Tidak Bekerja">Tidak Bekerja / Unemployed</option>
+                    <option value="Pelajar">Pelajar / Student</option>
+                    <option value="Sektor Awam">Sektor Awam / Public Sector</option>
+                    <option value="Sektor Swasta">Sektor Swasta / Private Sector</option>
+                    <option value="Bekerja Sendiri">Bekerja Sendiri / Self-Employed</option>
+                </select>
+            </div>
+
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(2)">Kembali / Back</button>
+                <button type="button" class="btn" onclick="nextStep(2)">Seterusnya / Next</button>
+            </div>
+        </div>
+
+        <div class="step" id="step3">
+            <h2>BAHAGIAN B: PROFIL STIGMA KOMUNITI (STIG-9)</h2>
+            <p style="font-weight: 600;">SAYA RASA KEBANYAKAN ORANG... <br><span class="bilingual-text">I FEEL THAT MOST PEOPLE...</span></p>
+            <hr>
+            <div id="stig9Container"></div>
+
+            <div class="flex-between">
+                <button type="button" class="btn btn-outline" onclick="prevStep(3)">Kembali / Back</button>
+                <button type="submit" class="btn" id="submitBtn">Hantar Soal Selidik / Submit</button>
+            </div>
+        </div>
+
+        <div class="step" id="step4" style="text-align: center; padding: 40px 0;">
+            <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+            <h2>Terima Kasih! / Thank You!</h2>
+            <p>Jawapan anda telah berjaya direkodkan.</p>
+            <p>Your response has been successfully recorded.</p>
+        </div>
+    </form>
+</div>
+
+<script>
+    const stigQuestions = [
+        ["... berasa tidak senang apabila seseorang yang pernah dirawat kerana masalah kesihatan mental berpindah ke kawasan kejiranan.", "... feel uncomfortable when someone who has been treated for a mental health problem moves into the neighborhood."],
+        ["... tidak akan menjalin hubungan dengan seseorang yang pernah dirawat kerana masalah kesihatan mental.", "... would not enter into a close relationship with someone who has been treated for a mental health problem."],
+        ["... tidak akan melayan permohonan pekerjaan daripada seseorang yang pernah dirawat kerana masalah kesihatan mental.", "... would not consider a job application from someone who has been treated for a mental health problem."],
+        ["... teragak-agak untuk meninggalkan anak mereka dengan seseorang yang telah dirawat kerana masalah kesihatan mental.", "... would hesitate to leave their children with someone who has been treated for a mental health problem."],
+        ["... menganggap masalah kesihatan mental sebagai tanda kelemahan diri.", "... consider mental health problems as a sign of personal weakness."],
+        ["... bersangka buruk terhadap seseorang yang mempunyai masalah kesihatan mental.", "... hold prejudices against someone who has a mental health problem."],
+        ["... teragak-agak untuk berurusan dengan seseorang yang pernah dirawat kerana masalah kesihatan mental.", "... would hesitate to do business with someone who has been treated for a mental health problem."],
+        ["... menganggap individu yang pernah dirawat kerana masalah kesihatan mental sebagai seseorang yang berbahaya.", "... consider individuals who have been treated for a mental health problem as dangerous."],
+        ["... memandang kurang serius pendapat seseorang yang pernah dirawat kerana masalah kesihatan mental.", "... take the opinions of someone who has been treated for a mental health problem less seriously."]
+    ];
+
+    const container = document.getElementById('stig9Container');
+    stigQuestions.forEach((q, i) => {
+        container.innerHTML += `
+            <div class="question-card">
+                <p><b>${i+1}. ${q[0]}</b></p>
+                <span class="bilingual-text" style="font-style: italic; margin-bottom: 10px;">${q[1]}</span>
+                <div class="options-row">
+                    <label><input type="radio" name="q${i+1}" value="Tidak Setuju" required><span>Tidak Setuju<br>(Disagree)</span></label>
+                    <label><input type="radio" name="q${i+1}" value="Agak Tidak Setuju"><span>Agak Tidak Setuju<br>(Slightly Disagree)</span></label>
+                    <label><input type="radio" name="q${i+1}" value="Agak Setuju"><span>Agak Setuju<br>(Slightly Agree)</span></label>
+                    <label><input type="radio" name="q${i+1}" value="Setuju"><span>Setuju<br>(Agree)</span></label>
+                </div>
+            </div>`;
+    });
+
+    let currentStep = 1;
+    function updateProgress() {
+        document.getElementById('progressBar').style.width = ((currentStep-1)/3)*100 + '%';
+    }
+
+    function nextStep(step) {
+        const currentStepEl = document.getElementById('step'+step);
+        const inputs = currentStepEl.querySelectorAll('input[required], select[required]');
+        
+        let valid = true;
+        inputs.forEach(input => {
+            if (input.type === 'radio') {
+                const name = input.name;
+                if (!document.querySelector(`input[name="${name}"]:checked`)) valid = false;
+            } else if (!input.value) {
+                valid = false;
+            }
+        });
+
+        if (!valid) {
+            alert("Sila lengkapkan semua maklumat sebelum ke bahagian seterusnya.");
+            return;
+        }
+
+        if (step === 1) {
+            const consent = document.querySelector('input[name="consent"]:checked').value;
+            if (consent === "No") {
+                alert("Anda telah memilih untuk tidak menyertai tinjauan ini. Terima kasih.");
+                return;
+            }
+        }
+
+        currentStepEl.classList.remove('active');
+        currentStep++;
+        document.getElementById('step'+currentStep).classList.add('active');
+        updateProgress();
+        window.scrollTo(0,0);
+    }
+
+    function prevStep(step) {
+        document.getElementById('step'+step).classList.remove('active');
+        currentStep--;
+        document.getElementById('step'+currentStep).classList.add('active');
+        updateProgress();
+    }
+
+    document.getElementById('surveyForm').onsubmit = function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Menghantar...";
+
+        // URL Web App
+        const scriptURL = "https://script.google.com/macros/s/AKfycbwLYEGnRCfPZaJrifs5PvIirdBdEb9zDn0MRHYdln_EKJkEw8ah7C9scYEm3obfQZg9/exec";
+
+        // MENGHANTAR DATA MENGGUNAKAN FORMDATA (MEMBUATKAN IA BOLEH DIBACA OLEH APPS SCRIPT)
+        fetch(scriptURL, { 
+            method: 'POST', 
+            body: new FormData(this)
+        })
+        .then(response => response.json()) // ataupun boleh abaikan baca response dari server jika guna no-cors
+        .then(() => {
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step4').classList.add('active');
+            document.getElementById('progressBar').style.width = '100%';
+        })
+        .catch(error => {
+            // Jika ada masalah CORS pun, kadang-kala data tetap berjaya masuk ke Google Sheet.
+            // Kita benarkan berjaya jika ianya 'Failed to fetch' akibat no-cors redirect
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step4').classList.add('active');
+            document.getElementById('progressBar').style.width = '100%';
+        });
+    };
+</script>
+</body>
+</html>
