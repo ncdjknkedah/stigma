@@ -38,6 +38,7 @@
         </div>
     </div>
 
+    <!-- KEMASKINI: Tambahan Butang Upload CSV pada Header -->
     <header class="bg-indigo-950 text-white p-6 shadow-2xl sticky top-0 z-50">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
@@ -45,7 +46,11 @@
                 <p class="text-slate-400 text-[10px] italic font-medium uppercase tracking-widest">Kajian Stigma Kesihatan Mental Bersepadu</p>
             </div>
             <div class="flex flex-col items-end gap-2">
-                <button onclick="init()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg">Kemaskini Data</button>
+                <div class="flex gap-2">
+                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleFileUpload(event)">
+                    <button onclick="document.getElementById('csvFileInput').click()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg border border-emerald-500">Upload CSV</button>
+                    <button onclick="init()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg border border-indigo-500">Kemaskini Auto</button>
+                </div>
                 <div id="updateTime" class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Memuatkan Data...</div>
             </div>
         </div>
@@ -65,14 +70,12 @@
             </div>
         </section>
 
-        <!-- SUSUNAN BARU: Kad dijadikan flex-center agar angka statik berada di bahagian tengah -->
         <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="card-stat border-l-8 border-l-indigo-500 flex flex-col justify-center items-center text-center h-full">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Responden (N)</p>
                 <h3 id="nVal" class="text-6xl font-black text-indigo-900 mt-2">0</h3>
             </div>
             
-            <!-- KOSMETIK UMUR: Tambahan Min(SD), Med(IQR) & Julat -->
             <div class="card-stat border-l-8 border-l-emerald-500 flex flex-col justify-center items-center text-center h-full">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Statistik Umur</p>
                 <div id="ageStats" class="flex flex-col items-center">
@@ -164,60 +167,82 @@
         let raw = []; let filteredData = []; let charts = {}; let zoomChartRef = null;
         Chart.register(ChartDataLabels);
 
+        // KEMASKINI: Modul ini digunapakai untuk kedua-dua (Web Auto-Sync atau Manual Upload) supaya efisien
+        function processData(p, source) {
+            try {
+                const gCol = (row, ...names) => {
+                    for(let n of names) { if(row[n] !== undefined) return row[n]; }
+                    return undefined;
+                };
+
+                raw = p.data.filter(d => gCol(d, "timestamp", "Timestamp", "Timestamp (Tarikh/Masa)")).map(d => {
+                    const age = parseFloat(gCol(d, "umur", "Umur", "UMUR")) || 0;
+                    let group = age <= 15 ? "0-15 Thn" : age <= 30 ? "16-30 Thn" : age <= 59 ? "31-59 Thn" : "60+ Thn";
+                    
+                    const q = (n) => parseFloat(gCol(d, "Q"+n, "q"+n)) || 0;
+                    
+                    return { 
+                        ...d, 
+                        Jantina: gCol(d, "jantina", "Jantina", "JANTINA") || "TIDAK NYATA",
+                        Umur: age,
+                        UmurGroup: group, 
+                        Bangsa: gCol(d, "bangsa", "Bangsa", "BANGSA") || "TIDAK NYATA",
+                        Agama: gCol(d, "agama", "Agama", "AGAMA") || "TIDAK NYATA",
+                        "Tahap Pendidikan": gCol(d, "pendidikan", "Tahap Pendidikan", "Pendidikan") || "TIDAK NYATA",
+                        Pekerjaan: gCol(d, "pekerjaan", "Pekerjaan", "PEKERJAAN") || "TIDAK NYATA",
+                        Afektif: (q(1)+q(9))/2, 
+                        Kognitif: (q(5)+q(6)+q(8))/3, 
+                        TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, 
+                        TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9,
+                        DateParsed: new Date(gCol(d, "timestamp", "Timestamp", "Timestamp (Tarikh/Masa)"))
+                    };
+                });
+
+                if (raw.length === 0) {
+                    alert("Tiada data ditemui.\nSila pastikan lajur (timestamp, umur, jantina, dsb) disediakan dalam format yang betul.");
+                } else {
+                    setupFilters(); populateSubGroups(); updateDashboard();
+                    document.getElementById('updateTime').innerText = `Update (${source}): ${new Date().toLocaleTimeString('ms-MY')}`;
+                }
+            } catch(err) {
+                console.error("Ralat logikal matematik:", err);
+            }
+        }
+
+        // BACA AUTO DARI GOOGLE SHEET
         function init() {
-            document.getElementById('updateTime').innerText = "Sedang Muat Turun Data...";
-            
+            document.getElementById('updateTime').innerText = "Sedang Muat Turun Data (Awan)...";
             Papa.parse(csvUrl, {
                 download: true,
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
-                complete: (p) => {
-                    try {
-                        const gCol = (row, ...names) => {
-                            for(let n of names) { if(row[n] !== undefined) return row[n]; }
-                            return undefined;
-                        };
-
-                        raw = p.data.filter(d => gCol(d, "timestamp", "Timestamp", "Timestamp (Tarikh/Masa)")).map(d => {
-                            const age = parseFloat(gCol(d, "umur", "Umur", "UMUR")) || 0;
-                            let group = age <= 15 ? "0-15 Thn" : age <= 30 ? "16-30 Thn" : age <= 59 ? "31-59 Thn" : "60+ Thn";
-                            
-                            const q = (n) => parseFloat(gCol(d, "Q"+n, "q"+n)) || 0;
-                            
-                            return { 
-                                ...d, 
-                                Jantina: gCol(d, "jantina", "Jantina", "JANTINA") || "TIDAK NYATA",
-                                Umur: age,
-                                UmurGroup: group, 
-                                Bangsa: gCol(d, "bangsa", "Bangsa", "BANGSA") || "TIDAK NYATA",
-                                Agama: gCol(d, "agama", "Agama", "AGAMA") || "TIDAK NYATA",
-                                "Tahap Pendidikan": gCol(d, "pendidikan", "Tahap Pendidikan", "Pendidikan") || "TIDAK NYATA",
-                                Pekerjaan: gCol(d, "pekerjaan", "Pekerjaan", "PEKERJAAN") || "TIDAK NYATA",
-                                Afektif: (q(1)+q(9))/2, 
-                                Kognitif: (q(5)+q(6)+q(8))/3, 
-                                TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, 
-                                TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9,
-                                DateParsed: new Date(gCol(d, "timestamp", "Timestamp", "Timestamp (Tarikh/Masa)"))
-                            };
-                        });
-
-                        if (raw.length === 0) {
-                            alert("Tiada datanya berjaya dicerap (Kosong). Sila pastikan Sheet mempunyai jawapan ujian.");
-                        } else {
-                            setupFilters(); populateSubGroups(); updateDashboard();
-                            document.getElementById('updateTime').innerText = `Update: ${new Date().toLocaleTimeString('ms-MY')}`;
-                        }
-                    } catch(parseErr) {
-                        console.error("Ralat pemprosesan logikal:", parseErr);
-                    }
-                },
+                complete: (p) => processData(p, "Automatik"),
                 error: (err) => console.error("Ralat muat turun PapaParse:", err)
             });
         }
 
+        // KEMASKINI: FUNGSI BACA FAIL MANUL/OFFLINE (CSV)
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('updateTime').innerText = "Membaca fail storan..."
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                Papa.parse(text, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    complete: (p) => processData(p, "Manual CSV"),
+                    error: (err) => alert("Gagal memecahkan format CSV: " + err)
+                });
+            };
+            reader.readAsText(file);
+        }
+
         function setupFilters() {
-            // KEMASKINI: Ditambah 'labelTitle' supaya menjadi pengenalan di menu
             const configs = [
                 {id: 'fJantina', col: colMap.jantina, labelTitle: 'Jantina'}, 
                 {id: 'fUmurGroup', col: 'UmurGroup', labelTitle: 'Kump. Umur'}, 
@@ -231,7 +256,6 @@
                 const sel = document.getElementById(c.id);
                 if(sel) {
                     const vals = [...new Set(raw.map(d => d[c.col]))].filter(Boolean).sort();
-                    // Menyatukan nama spesifik
                     sel.innerHTML = `<option value="All">${c.labelTitle} (Semua)</option>`;
                     vals.forEach(v => sel.innerHTML += `<option value="${v}">${v}</option>`);
                 }
@@ -256,7 +280,6 @@
             if(filteredData.length > 0) {
                 const ages = filteredData.map(d => d[colMap.umur]).filter(Number);
                 if (ages.length > 0) {
-                    // PENGIRAAN: Lengkapkan statistik unjuran umur mengikut kemahuan
                     const mean = jStat.mean(ages).toFixed(1);
                     const sd = jStat.stdev(ages).toFixed(1);
                     const median = jStat.median(ages).toFixed(1);
@@ -418,7 +441,7 @@
         function closeModal() { document.getElementById('chartModal').style.display = "none"; if(zoomChartRef) zoomChartRef.destroy(); }
         function resetFilters() { document.querySelectorAll('select').forEach(s => s.value = 'All'); updateDashboard(); }
         
-        init();
+        init(); // Mula baca Google Sheet bila pertama kali buka
     </script>
 </body>
 </html>
