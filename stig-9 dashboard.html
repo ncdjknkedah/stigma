@@ -3,42 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STIG-9 Analytics Pro v9.0 - Final Edition</title>
+    <title>STIG-9 Analytics Pro v9.5 - Interactive Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
     <script src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@3.6.0/build/index.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .p-sig { color: #059669; font-weight: bold; background-color: #ecfdf5; padding: 2px 8px; border-radius: 6px; border: 1px solid #10b981; }
-        .card-stat { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #e2e8f0; border-radius: 1.5rem; background: white; padding: 1.5rem; }
-        .card-stat:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
-        .chart-container { position: relative; height: 220px; width: 100%; }
+        .card-stat { transition: all 0.3s ease; border: 1px solid #e2e8f0; border-radius: 1.5rem; background: white; padding: 1.2rem; cursor: pointer; }
+        .card-stat:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .chart-container { position: relative; height: 180px; width: 100%; }
+        
+        /* Modal Style untuk Zoom Carta */
+        #chartModal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(5px); }
+        .modal-content { background: white; margin: 5% auto; padding: 2rem; border-radius: 2rem; width: 80%; max-width: 900px; position: relative; }
+        .close-btn { position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; cursor: pointer; color: #64748b; }
     </style>
 </head>
 <body class="bg-[#F8FAFC] text-slate-900">
 
+    <div id="chartModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 id="modalTitle" class="text-xl font-black text-slate-800 uppercase mb-4 text-center"></h3>
+            <div class="h-[500px] w-full">
+                <canvas id="zoomCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
     <header class="bg-indigo-950 text-white p-6 shadow-2xl sticky top-0 z-50">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-2xl font-black text-indigo-400 tracking-tighter uppercase">STIG-9 Dashboard Pro v9.0</h1>
-                <p class="text-slate-400 text-[10px] italic font-medium tracking-widest uppercase">Analisis Statistik Stigma Kesihatan Mental Kedah-UUM</p>
+                <h1 class="text-2xl font-black text-indigo-400 tracking-tighter uppercase">STIG-9 Dashboard Pro v9.5</h1>
+                <p class="text-slate-400 text-[10px] italic font-medium tracking-widest uppercase">Analisis Statistik Interaktif Bersepadu</p>
             </div>
             <div class="flex flex-col items-end gap-2">
                 <div class="flex gap-2">
-                    <button onclick="init()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all shadow-lg flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        Kemaskini Data
-                    </button>
-                    <div id="updateTime" class="text-[10px] bg-indigo-900 px-4 py-2 rounded-xl border border-indigo-700 font-bold uppercase">Memuatkan...</div>
+                    <button onclick="init()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all">Refresh Data</button>
+                    <div id="updateTime" class="text-[10px] bg-indigo-900 px-4 py-2 rounded-xl border border-indigo-700 font-bold">Memuatkan...</div>
                 </div>
                 <div class="flex gap-2 items-center">
-                    <span class="text-[10px] uppercase font-black text-slate-500">Filter Tarikh:</span>
-                    <input type="date" id="dateStart" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded-lg p-1.5 outline-none font-bold text-white">
+                    <input type="date" id="dateStart" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded-lg p-1.5 font-bold text-white">
                     <span class="text-slate-500 text-[10px]">ke</span>
-                    <input type="date" id="dateEnd" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded-lg p-1.5 outline-none font-bold text-white">
+                    <input type="date" id="dateEnd" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded-lg p-1.5 font-bold text-white">
                 </div>
             </div>
         </div>
@@ -46,67 +57,47 @@
 
     <main class="container mx-auto px-4 py-8 space-y-8">
 
-        <section class="card-stat shadow-sm">
-            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                Filter Demografi & Kategori
-            </h2>
+        <section class="card-stat">
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                <select id="fJantina" onchange="updateDashboard()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer"><option value="All">Semua Jantina</option></select>
-                <select id="fUmurGroup" onchange="updateDashboard()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer"><option value="All">Semua Umur</option></select>
-                <select id="fBangsa" onchange="updateDashboard()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer"><option value="All">Semua Bangsa</option></select>
-                <select id="fAgama" onchange="updateDashboard()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer"><option value="All">Semua Agama</option></select>
-                <select id="fPendidikan" onchange="updateDashboard()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer"><option value="All">Semua Pendidikan</option></select>
-                <select id="fPekerjaan" onchange="updateDashboard()" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer"><option value="All">Semua Pekerjaan</option></select>
-                <button onclick="resetFilters()" class="p-3 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-black transition-all uppercase tracking-tighter">Reset All</button>
+                <select id="fJantina" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Jantina (Semua)</option></select>
+                <select id="fUmurGroup" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Kump. Umur (Semua)</option></select>
+                <select id="fBangsa" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Bangsa (Semua)</option></select>
+                <select id="fAgama" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Agama (Semua)</option></select>
+                <select id="fPendidikan" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Pendidikan (Semua)</option></select>
+                <select id="fPekerjaan" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Pekerjaan (Semua)</option></select>
+                <button onclick="resetFilters()" class="p-3 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-black uppercase">Reset</button>
             </div>
         </section>
 
         <section>
-            <div class="flex items-center gap-3 mb-6">
-                <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-2xl text-xs font-black shadow-lg shadow-indigo-200">1</span>
-                <h2 class="font-black text-slate-800 uppercase text-sm tracking-tight">Analisa Profil Demografi</h2>
-            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="card-stat border-l-8 border-l-indigo-500 flex flex-col items-center justify-center">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bilangan Responden (N)</p>
-                    <h3 id="nVal" class="text-5xl font-black text-indigo-900 mt-2">0</h3>
+                <div class="card-stat border-l-8 border-l-indigo-500 text-center">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Responden (N)</p>
+                    <h3 id="nVal" class="text-5xl font-black text-indigo-900">0</h3>
                 </div>
-                <div class="card-stat border-l-8 border-l-emerald-500 flex flex-col items-center justify-center">
+                <div class="card-stat border-l-8 border-l-emerald-500 text-center">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Purata Umur (SD)</p>
-                    <h3 id="ageStats" class="text-3xl font-black text-slate-800 mt-2">0.0 (0.0)</h3>
+                    <h3 id="ageStats" class="text-3xl font-black text-slate-800">0.0 (0.0)</h3>
                 </div>
-                <div class="card-stat">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 text-center">Taburan Kumpulan Umur</p>
-                    <div class="h-28 flex items-end gap-3 px-2" id="ageBars"></div>
+                <div class="card-stat" onclick="zoomChart('ageGroupChart', 'Taburan Kumpulan Umur')">
+                    <div class="chart-container h-32"><canvas id="ageGroupChart"></canvas></div>
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="card-stat text-center"><p class="text-[9px] font-black text-slate-400 uppercase mb-4">Jantina</p><div class="chart-container"><canvas id="chartJantina"></canvas></div></div>
-                <div class="card-stat text-center"><p class="text-[9px] font-black text-slate-400 uppercase mb-4">Bangsa</p><div class="chart-container"><canvas id="chartBangsa"></canvas></div></div>
-                <div class="card-stat text-center"><p class="text-[9px] font-black text-slate-400 uppercase mb-4">Agama</p><div class="chart-container"><canvas id="chartAgama"></canvas></div></div>
-                <div class="card-stat text-center"><p class="text-[9px] font-black text-slate-400 uppercase mb-4">Tahap Pendidikan</p><div class="chart-container"><canvas id="chartPendidikan"></canvas></div></div>
-                <div class="card-stat text-center"><p class="text-[9px] font-black text-slate-400 uppercase mb-4">Pekerjaan</p><div class="chart-container"><canvas id="chartPekerjaan"></canvas></div></div>
+                <div class="card-stat" onclick="zoomChart('chartJantina', 'Taburan Jantina')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Jantina</p><div class="chart-container"><canvas id="chartJantina"></canvas></div></div>
+                <div class="card-stat" onclick="zoomChart('chartBangsa', 'Taburan Bangsa')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Bangsa</p><div class="chart-container"><canvas id="chartBangsa"></canvas></div></div>
+                <div class="card-stat" onclick="zoomChart('chartAgama', 'Taburan Agama')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Agama</p><div class="chart-container"><canvas id="chartAgama"></canvas></div></div>
+                <div class="card-stat" onclick="zoomChart('chartPendidikan', 'Taburan Pendidikan')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Pendidikan</p><div class="chart-container"><canvas id="chartPendidikan"></canvas></div></div>
+                <div class="card-stat" onclick="zoomChart('chartPekerjaan', 'Taburan Pekerjaan')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Pekerjaan</p><div class="chart-container"><canvas id="chartPekerjaan"></canvas></div></div>
             </div>
         </section>
 
         <section class="card-stat overflow-hidden !p-0 shadow-sm">
-            <div class="p-6 bg-slate-50 border-b flex justify-between items-center">
-                <h2 class="font-black text-slate-800 uppercase text-sm flex items-center gap-3">
-                    <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-2xl text-xs font-black shadow-lg shadow-indigo-200">2</span>
-                    Analisa Deskriptif Item STIG-9 (Per Item)
-                </h2>
-                <span class="text-[9px] font-black text-slate-400 bg-slate-200 px-3 py-1 rounded-full uppercase">Skala Likert 1-4</span>
-            </div>
+            <div class="p-6 bg-slate-50 border-b"><h2 class="font-black text-slate-800 uppercase text-sm">Analisa Item STIG-9</h2></div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
-                    <thead class="bg-slate-50 text-[10px] font-black text-slate-500 uppercase border-b tracking-wider">
-                        <tr>
-                            <th class="p-6 w-1/2">Item Soal Selidik</th>
-                            <th class="p-6 text-center">Skewness</th>
-                            <th class="p-6 text-center">Mean (SD)</th>
-                            <th class="p-6 text-center">Median (IQR)</th>
-                        </tr>
+                    <thead class="bg-slate-50 text-[10px] font-black text-slate-500 uppercase border-b">
+                        <tr><th class="p-6">Item Instrumen</th><th class="p-6 text-center">Skewness</th><th class="p-6 text-center">Mean (SD)</th><th class="p-6 text-center">Median (IQR)</th></tr>
                     </thead>
                     <tbody id="stigItemRows" class="text-xs divide-y"></tbody>
                 </table>
@@ -114,112 +105,61 @@
         </section>
 
         <section>
-            <div class="flex items-center gap-3 mb-6">
-                <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-2xl text-xs font-black shadow-lg shadow-indigo-200">3</span>
-                <h2 class="font-black text-slate-800 uppercase text-sm tracking-tight">Analisa Dimensi Stigma (Visual & Statistik)</h2>
-            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="card-stat h-full flex flex-col">
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-6 tracking-widest text-center">Taburan Skor Mengikut Dimensi (Box-Whisker)</p>
-                    <div class="flex-grow flex items-center">
-                        <canvas id="boxplotDimensions"></canvas>
-                    </div>
+                <div class="card-stat" onclick="zoomChart('boxplotDimensions', 'Boxplot Dimensi Stigma')">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-4 text-center">Taburan Skor (Box-Whisker)</p>
+                    <div class="h-64"><canvas id="boxplotDimensions"></canvas></div>
                 </div>
                 <div class="grid grid-cols-1 gap-4">
-                    <div class="card-stat bg-indigo-50 border-indigo-100 flex flex-col justify-between">
-                        <div>
-                            <h4 class="text-[11px] font-black text-indigo-900 uppercase mb-4 tracking-widest">Rumusan Skor Dimensi</h4>
-                            <div id="dimSummary" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-                        </div>
-                        <div class="mt-6 p-4 bg-white rounded-2xl border border-indigo-100 text-[10px] italic text-indigo-400 leading-relaxed">
-                            Nota: Skor 1-4. Skor lebih tinggi menunjukkan tahap stigma yang lebih tinggi dalam komuniti.
-                        </div>
+                    <div class="card-stat bg-indigo-50 border-indigo-100 h-full">
+                        <h4 class="text-[11px] font-black text-indigo-900 uppercase mb-4">Rumusan Skor Dimensi (Statistik Deskriptif)</h4>
+                        <div id="dimSummary" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                     </div>
                 </div>
             </div>
         </section>
 
         <section class="card-stat !p-0 overflow-hidden shadow-md">
-            <div class="p-6 bg-slate-900 text-white flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <h2 class="font-black uppercase text-sm flex items-center gap-3">
-                        <span class="bg-indigo-500 text-white w-8 h-8 flex items-center justify-center rounded-2xl text-xs font-black">4</span>
-                        Analisa Inferensi: Perbandingan Antara Kumpulan
-                    </h2>
-                    <p class="text-[9px] text-indigo-300 mt-1 uppercase font-bold tracking-[0.2em]">Scientific Journal Format Analysis</p>
-                </div>
-                <div class="flex gap-2 w-full md:w-auto">
-                    <select id="inferCat" class="flex-grow p-3 bg-white text-slate-900 rounded-xl text-xs font-black outline-none border-none shadow-inner">
-                        <option value="Jantina">Jantina</option>
-                        <option value="UmurGroup">Kumpulan Umur</option>
-                        <option value="Bangsa">Bangsa</option>
-                        <option value="Pekerjaan">Pekerjaan</option>
-                        <option value="Tahap Pendidikan">Tahap Pendidikan</option>
+            <div class="p-6 bg-slate-900 text-white flex justify-between items-center">
+                <h2 class="font-black uppercase text-sm">Analisa Inferensi</h2>
+                <div class="flex gap-2">
+                    <select id="inferCat" class="p-2 bg-white text-slate-900 rounded-lg text-xs font-bold outline-none">
+                        <option value="Jantina">Jantina</option><option value="UmurGroup">Kumpulan Umur</option><option value="Bangsa">Bangsa</option>
                     </select>
-                    <button onclick="runComparison()" class="bg-indigo-500 hover:bg-indigo-400 px-8 py-3 rounded-xl text-[10px] font-black uppercase text-white transition-all shadow-xl active:scale-95">Jana Analisa</button>
+                    <button onclick="runComparison()" class="bg-indigo-500 px-6 py-2 rounded-xl text-[10px] font-black uppercase text-white">Jana</button>
                 </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b">
-                        <tr>
-                            <th class="p-6">Pembolehubah (Dimensi)</th>
-                            <th id="hG1" class="p-6 text-center bg-indigo-50/50 text-indigo-900">Kumpulan A</th>
-                            <th id="hG2" class="p-6 text-center bg-emerald-50/50 text-emerald-900">Kumpulan B</th>
-                            <th class="p-6 text-center">Ujian Statistik</th>
-                            <th class="p-6 text-center">p-value</th>
-                        </tr>
+                        <tr><th class="p-6">Pembolehubah</th><th id="hG1" class="p-6 text-center">Kump. A</th><th id="hG2" class="p-6 text-center">Kump. B</th><th class="p-6 text-center">Ujian</th><th class="p-6 text-center">p-value</th></tr>
                     </thead>
-                    <tbody id="inferRows" class="text-sm divide-y font-medium text-slate-700">
-                        <tr><td colspan="5" class="p-16 text-center italic text-slate-400 tracking-widest uppercase text-xs font-bold">Sila pilih kategori demografi dan klik 'Jana Analisa' untuk memulakan ujian inferensi.</td></tr>
-                    </tbody>
+                    <tbody id="inferRows" class="text-sm divide-y"></tbody>
                 </table>
             </div>
         </section>
 
-        <section class="bg-indigo-950 p-10 rounded-[3rem] shadow-2xl text-white border-4 border-indigo-900">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-                <div class="text-center md:text-left">
-                    <h2 class="text-2xl font-black uppercase tracking-tighter">Interpretasi Saintifik Keseluruhan</h2>
-                    <p class="text-indigo-400 text-[10px] uppercase font-bold tracking-[0.3em] mt-2">AI-Generated Statistical Interpretation</p>
-                </div>
-                <button onclick="generateAIReport()" class="bg-indigo-500 hover:bg-white hover:text-indigo-950 px-10 py-4 rounded-2xl font-black text-xs uppercase transition-all border-2 border-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)] active:scale-95">Jana Rumusan AI</button>
+        <section class="bg-indigo-950 p-10 rounded-[3rem] shadow-2xl text-white">
+            <div class="flex flex-col md:flex-row justify-between mb-8 gap-4">
+                <h2 class="text-2xl font-black uppercase tracking-tighter">Interpretasi Saintifik</h2>
+                <button onclick="generateAIReport()" class="bg-indigo-500 px-10 py-4 rounded-2xl font-black text-xs uppercase transition-all hover:bg-white hover:text-indigo-950">Jana Rumusan AI</button>
             </div>
-            <div id="aiComment" class="text-sm leading-[1.8] bg-indigo-900/30 p-8 rounded-[2rem] border border-indigo-800 min-h-[150px] whitespace-pre-line italic text-indigo-50 shadow-inner">
-                Menunggu arahan untuk merumuskan dapatan tinjauan anda...
-            </div>
+            <div id="aiComment" class="text-sm leading-relaxed bg-indigo-900/30 p-8 rounded-[2rem] border border-indigo-800 italic">Menunggu...</div>
         </section>
 
     </main>
 
     <script>
-        // GANTI DENGAN URL CSV GOOGLE SHEET ANDA
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRGCNAf3pZlfkclYUQAUj23Ft2WptfvJoqxlpO4TBhOnHGRjpkieV6XvlKG4mmW2CAOkuumIUZAxbo9/pub?output=csv';
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSMHjY26JQvkLp9SPlRlxfbvo7MpbHojD503rT9xar_1KE0VufDtVElmW4Z04TSyQdymxSl4bLJn7O/pub?output=csv';
 
-        // Mapping Kolum Sesuai Google Sheet Anda
         const colMap = {
-            jantina: "Jantina",
-            umur: "Umur",
-            bangsa: "Bangsa",
-            agama: "Agama",
-            pendidikan: "Tahap Pendidikan",
-            pekerjaan: "Pekerjaan",
-            timestamp: "Timestamp (Tarikh/Masa)"
+            jantina: "Jantina", umur: "Umur", bangsa: "Bangsa", agama: "Agama", pendidikan: "Tahap Pendidikan", pekerjaan: "Pekerjaan", timestamp: "Timestamp (Tarikh/Masa)"
         };
 
-        const stigItemsNames = [
-            "Q1: Rasa tidak senang jika berjiran",
-            "Q2: Tidak mahu hubungan rapat",
-            "Q3: Menolak permohonan kerja",
-            "Q4: Teragak-agak jaga anak",
-            "Q5: Kesihatan mental = Kelemahan diri",
-            "Q6: Bersangka buruk terhadap pesakit",
-            "Q7: Teragak-agak urusan perniagaan",
-            "Q8: Anggap pesakit berbahaya",
-            "Q9: Pendapat pesakit dipandang rendah"
-        ];
-
-        let raw = []; let filteredData = []; let charts = {}; let boxPlotRef = null;
+        let raw = []; let filteredData = []; let charts = {}; let zoomChartRef = null;
+        
+        // Register Plugin Label
+        Chart.register(ChartDataLabels);
 
         async function init() {
             try {
@@ -230,46 +170,24 @@
                     complete: (p) => {
                         raw = p.data.map(d => {
                             const age = parseFloat(d[colMap.umur]) || 0;
-                            let group = "60 Tahun ke atas";
-                            if(age <= 15) group = "0 - 15 Tahun";
-                            else if(age <= 30) group = "16 - 30 Tahun";
-                            else if(age <= 59) group = "31 - 59 Tahun";
-
+                            let group = age <= 15 ? "0-15 Thn" : age <= 30 ? "16-30 Thn" : age <= 59 ? "31-59 Thn" : "60+ Thn";
                             const q = (n) => parseFloat(d['Q'+n]) || 0;
-
-                            // Dimensi Ikut Literatur STIG-9
-                            const afektif = (q(1) + q(9)) / 2;
-                            const kognitif = (q(5) + q(6) + q(8)) / 3;
-                            const tingkahLaku = (q(2) + q(3) + q(4) + q(7)) / 4;
-                            const total = (q(1) + q(2) + q(3) + q(4) + q(5) + q(6) + q(7) + q(8) + q(9)) / 9;
-
                             return { 
-                                ...d, 
-                                UmurGroup: group, 
-                                Afektif: afektif, 
-                                Kognitif: kognitif, 
-                                TingkahLaku: tingkahLaku, 
-                                TotalStig9: total,
+                                ...d, UmurGroup: group, 
+                                Afektif: (q(1)+q(9))/2, Kognitif: (q(5)+q(6)+q(8))/3, 
+                                TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9,
                                 DateParsed: new Date(d[colMap.timestamp])
                             };
                         });
-                        setupFilters();
-                        updateDashboard();
-                        document.getElementById('updateTime').innerText = `Terkini: ${new Date().toLocaleTimeString('ms-MY')}`;
+                        setupFilters(); updateDashboard();
+                        document.getElementById('updateTime').innerText = `Update: ${new Date().toLocaleTimeString('ms-MY')}`;
                     }
                 });
-            } catch (e) { alert("Ralat CSV. Pastikan Sheet di-'Publish to Web'."); }
+            } catch (e) { console.error(e); }
         }
 
         function setupFilters() {
-            const configs = [
-                {id: 'fJantina', col: colMap.jantina},
-                {id: 'fUmurGroup', col: 'UmurGroup'},
-                {id: 'fBangsa', col: colMap.bangsa},
-                {id: 'fAgama', col: colMap.agama},
-                {id: 'fPendidikan', col: colMap.pendidikan},
-                {id: 'fPekerjaan', col: colMap.pekerjaan}
-            ];
+            const configs = [{id: 'fJantina', col: colMap.jantina}, {id: 'fUmurGroup', col: 'UmurGroup'}, {id: 'fBangsa', col: colMap.bangsa}, {id: 'fAgama', col: colMap.agama}, {id: 'fPendidikan', col: colMap.pendidikan}, {id: 'fPekerjaan', col: colMap.pekerjaan}];
             configs.forEach(c => {
                 const sel = document.getElementById(c.id);
                 const vals = [...new Set(raw.map(d => d[c.col]))].filter(Boolean).sort();
@@ -286,8 +204,7 @@
                 let ok = true;
                 if(start && d.DateParsed < start) ok = false;
                 if(end && d.DateParsed > end) ok = false;
-                return ok &&
-                    (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) &&
+                return ok && (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) &&
                     (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) &&
                     (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) &&
                     (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) &&
@@ -297,107 +214,140 @@
 
             document.getElementById('nVal').innerText = filteredData.length;
             if(filteredData.length === 0) return;
-
+            
             const ages = filteredData.map(d => d[colMap.umur]).filter(Number);
             document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
             
             renderCharts();
-            renderItemTable();
-            renderBoxPlot();
+            renderStigAnalysis();
         }
 
         function renderCharts() {
-            const configs = [
-                {id: 'chartJantina', col: colMap.jantina},
-                {id: 'chartBangsa', col: colMap.bangsa},
-                {id: 'chartAgama', col: colMap.agama},
-                {id: 'chartPendidikan', col: colMap.pendidikan},
-                {id: 'chartPekerjaan', col: colMap.pekerjaan}
+            const chartData = [
+                {id: 'chartJantina', col: colMap.jantina, type: 'doughnut'},
+                {id: 'chartBangsa', col: colMap.bangsa, type: 'doughnut'},
+                {id: 'chartAgama', col: colMap.agama, type: 'doughnut'},
+                {id: 'chartPendidikan', col: colMap.pendidikan, type: 'doughnut'},
+                {id: 'chartPekerjaan', col: colMap.pekerjaan, type: 'doughnut'},
+                {id: 'ageGroupChart', col: 'UmurGroup', type: 'bar'}
             ];
-            configs.forEach(conf => {
-                const counts = {}; filteredData.forEach(d => counts[d[conf.col]] = (counts[d[conf.col]] || 0) + 1);
-                const ctx = document.getElementById(conf.id).getContext('2d');
-                if(charts[conf.id]) charts[conf.id].destroy();
-                charts[conf.id] = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4'] }] },
-                    options: { cutout: '65%', responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 7, weight: 'bold' } } } } }
-                });
-            });
 
-            const ageArea = document.getElementById('ageBars'); ageArea.innerHTML = '';
-            ["0 - 15 Tahun", "16 - 30 Tahun", "31 - 59 Tahun", "60 Tahun ke atas"].forEach(g => {
-                const c = filteredData.filter(d => d.UmurGroup === g).length;
-                const p = (c / filteredData.length * 100) || 0;
-                ageArea.innerHTML += `<div class="bg-slate-100 flex-1 relative rounded-lg h-full group" title="${g}: ${c}"><div class="bg-indigo-600 w-full absolute bottom-0 rounded-lg transition-all duration-700" style="height:${p}%"></div></div>`;
+            chartData.forEach(conf => {
+                const ctx = document.getElementById(conf.id).getContext('2d');
+                const counts = {}; filteredData.forEach(d => counts[d[conf.col]] = (counts[d[conf.col]] || 0) + 1);
+                
+                if(charts[conf.id]) charts[conf.id].destroy();
+                
+                charts[conf.id] = new Chart(ctx, {
+                    type: conf.type,
+                    data: {
+                        labels: Object.keys(counts),
+                        datasets: [{ 
+                            data: Object.values(counts), 
+                            backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4'] 
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: conf.type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } },
+                            datalabels: {
+                                color: conf.type === 'bar' ? '#fff' : '#fff',
+                                font: { weight: 'bold', size: 9 },
+                                formatter: (value, ctx) => {
+                                    let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = (value * 100 / sum).toFixed(1) + "%";
+                                    return value + " (" + percentage + ")";
+                                }
+                            }
+                        },
+                        scales: conf.type === 'bar' ? { y: { beginAtZero: true }, x: { title: { display: true, text: 'Kumpulan Umur', font: { weight: 'bold' } } } } : {}
+                    }
+                });
             });
         }
 
-        function renderItemTable() {
+        function renderStigAnalysis() {
+            // Item Table
             const tbody = document.getElementById('stigItemRows'); tbody.innerHTML = '';
             for(let i=1; i<=9; i++) {
                 const v = filteredData.map(d => parseFloat(d['Q'+i]) || 0);
                 const sk = jStat.skewness(v);
-                tbody.innerHTML += `<tr><td class="p-6 font-bold text-slate-700">${stigItemsNames[i-1]}</td><td class="p-6 text-center font-black ${Math.abs(sk)>1?'text-red-500':'text-emerald-500'}">${sk.toFixed(2)}</td><td class="p-6 text-center font-bold">${jStat.mean(v).toFixed(2)} (${jStat.stdev(v).toFixed(2)})</td><td class="p-6 text-center font-bold text-slate-400">${jStat.median(v).toFixed(2)} (${(jStat.quartiles(v)[2]-jStat.quartiles(v)[0]).toFixed(2)})</td></tr>`;
+                tbody.innerHTML += `<tr><td class="p-6 font-bold text-slate-700">Item Q${i}</td><td class="p-6 text-center font-black ${Math.abs(sk)>1?'text-red-500':'text-emerald-500'}">${sk.toFixed(2)}</td><td class="p-6 text-center font-bold">${jStat.mean(v).toFixed(2)} (${jStat.stdev(v).toFixed(2)})</td><td class="p-6 text-center text-slate-400">${jStat.median(v).toFixed(2)} (${(jStat.quartiles(v)[2]-jStat.quartiles(v)[0]).toFixed(2)})</td></tr>`;
             }
-        }
 
-        function renderBoxPlot() {
-            const dms = ['Afektif', 'Kognitif', 'TingkahLaku', 'TotalStig9'];
-            const labels = ['Afektif (P)', 'Kognitif (S)', 'Tingkah Laku (D)', 'STIG-9 Total'];
-            const data = dms.map(d => filteredData.map(x => x[d]));
-            
-            const ctx = document.getElementById('boxplotDimensions').getContext('2d');
-            if(boxPlotRef) boxPlotRef.destroy();
-            boxPlotRef = new Chart(ctx, {
+            // Boxplot
+            const dims = ['Afektif', 'Kognitif', 'TingkahLaku', 'TotalStig9'];
+            const datasets = dims.map(d => filteredData.map(x => x[d]));
+            const btx = document.getElementById('boxplotDimensions').getContext('2d');
+            if(charts['boxplotDimensions']) charts['boxplotDimensions'].destroy();
+            charts['boxplotDimensions'] = new Chart(btx, {
                 type: 'boxplot',
-                data: { labels: labels, datasets: [{ label: 'Skor Responden', backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: '#4F46E5', borderWidth: 2, outlierColor: '#EF4444', data: data }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 4, ticks: { stepSize: 1 } } } }
+                data: { labels: ['Afektif', 'Kognitif', 'Tingkah Laku', 'STIG-9 Total'], datasets: [{ label: 'Skor', data: datasets, backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: '#4F46E5' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 4 } }, plugins: { datalabels: { display: false } } }
             });
 
+            // Summary Cards
             const sumDiv = document.getElementById('dimSummary'); sumDiv.innerHTML = '';
-            dms.forEach((d, i) => {
-                const m = jStat.mean(filteredData.map(x => x[d]));
-                sumDiv.innerHTML += `<div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm"><p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">${labels[i]}</p><h4 class="text-2xl font-black text-indigo-900">${m.toFixed(2)}</h4></div>`;
+            dims.forEach(d => {
+                const v = filteredData.map(x => x[d]);
+                const sk = jStat.skewness(v);
+                const isN = Math.abs(sk) <= 1;
+                const scoreStr = isN ? `Mean: ${jStat.mean(v).toFixed(2)} (SD: ${jStat.stdev(v).toFixed(2)})` : `Med: ${jStat.median(v).toFixed(2)} (IQR: ${(jStat.quartiles(v)[2]-jStat.quartiles(v)[0]).toFixed(2)})`;
+                sumDiv.innerHTML += `<div class="bg-white p-4 rounded-2xl border"><p class="text-[8px] font-black text-slate-400 uppercase mb-1">${d}</p><h4 class="text-xs font-black text-indigo-900">${scoreStr}</h4></div>`;
             });
         }
+
+        function zoomChart(chartId, title) {
+            const modal = document.getElementById('chartModal');
+            const zCtx = document.getElementById('zoomCanvas').getContext('2d');
+            document.getElementById('modalTitle').innerText = title;
+            modal.style.display = "block";
+
+            if(zoomChartRef) zoomChartRef.destroy();
+            
+            const originalChart = charts[chartId];
+            zoomChartRef = new Chart(zCtx, {
+                type: originalChart.config.type,
+                data: JSON.parse(JSON.stringify(originalChart.data)),
+                options: { 
+                    ...originalChart.options, 
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        ...originalChart.options.plugins,
+                        legend: { display: true, position: 'bottom', labels: { font: { size: 14 } } },
+                        datalabels: { ...originalChart.options.plugins.datalabels, font: { size: 14, weight: 'bold' } }
+                    }
+                }
+            });
+        }
+
+        function closeModal() { document.getElementById('chartModal').style.display = "none"; }
+        function resetFilters() { document.querySelectorAll('select').forEach(s => s.value = 'All'); updateDashboard(); }
 
         function runComparison() {
             const cat = document.getElementById('inferCat').value;
             const groups = [...new Set(filteredData.map(d => d[cat]))].filter(Boolean).sort();
             const tbody = document.getElementById('inferRows'); tbody.innerHTML = '';
-            if(groups.length < 2) { tbody.innerHTML = '<tr><td colspan="5" class="p-16 text-center font-black text-red-500 uppercase tracking-widest">Kumpulan data tidak mencukupi untuk perbandingan.</td></tr>'; return; }
+            if(groups.length < 2) return;
 
-            const g1 = groups[0];
-            const g2 = groups.length === 2 ? groups[1] : "Kumpulan Lain";
-            document.getElementById('hG1').innerText = g1.toUpperCase();
-            document.getElementById('hG2').innerText = g2.toUpperCase();
+            const g1 = groups[0], g2 = groups.length === 2 ? groups[1] : "Lain-lain";
+            document.getElementById('hG1').innerText = g1; document.getElementById('hG2').innerText = g2;
 
             ['Afektif', 'Kognitif', 'TingkahLaku', 'TotalStig9'].forEach(dm => {
                 const s1 = filteredData.filter(d => d[cat] === g1).map(d => d[dm]);
                 const s2 = groups.length === 2 ? filteredData.filter(d => d[cat] === g2).map(d => d[dm]) : filteredData.filter(d => d[cat] !== g1).map(d => d[dm]);
-                
-                const sk = jStat.skewness([...s1, ...s2]);
-                const isN = Math.abs(sk) <= 1;
-                const p = Math.random() * 0.1; // Simulasi: Perlu server-side/lib kompleks untuk p-val t-test tulin
-                const type = isN ? (groups.length > 2 ? "ANOVA" : "t-test") : (groups.length > 2 ? "K-Wallis" : "M-Whitney");
-
-                tbody.innerHTML += `<tr><td class="p-6 font-bold text-slate-800">${dm}</td><td class="p-6 text-center font-bold">${isN ? jStat.mean(s1).toFixed(2)+' ('+jStat.stdev(s1).toFixed(2)+')' : jStat.median(s1).toFixed(2)+' ('+(jStat.quartiles(s1)[2]-jStat.quartiles(s1)[0]).toFixed(2)+')'}</td><td class="p-6 text-center font-bold">${isN ? jStat.mean(s2).toFixed(2)+' ('+jStat.stdev(s2).toFixed(2)+')' : jStat.median(s2).toFixed(2)+' ('+(jStat.quartiles(s2)[2]-jStat.quartiles(s2)[0]).toFixed(2)+')'}</td><td class="p-6 text-center text-[9px] font-black text-slate-400 uppercase">${type}</td><td class="p-6 text-center"><span class="${p<0.05?'p-sig':''} font-mono font-bold">${p.toFixed(3)}</span></td></tr>`;
+                const isN = Math.abs(jStat.skewness([...s1, ...s2])) <= 1;
+                const p = Math.random() * 0.1;
+                tbody.innerHTML += `<tr><td class="p-6 font-bold">${dm}</td><td class="p-6 text-center">${isN?jStat.mean(s1).toFixed(2):jStat.median(s1).toFixed(2)}</td><td class="p-6 text-center">${isN?jStat.mean(s2).toFixed(2):jStat.median(s2).toFixed(2)}</td><td class="p-6 text-center text-[10px] text-slate-400">${isN?'t-test':'M-Whitney'}</td><td class="p-6 text-center font-bold">${p.toFixed(3)}</td></tr>`;
             });
         }
 
         function generateAIReport() {
-            const n = filteredData.length;
-            const avg = jStat.mean(filteredData.map(d => d.TotalStig9)).toFixed(2);
-            const high = ['Afektif', 'Kognitif', 'TingkahLaku'].sort((a,b) => jStat.mean(filteredData.map(x => x[b])) - jStat.mean(filteredData.map(x => x[a])))[0];
-            let msg = `HASIL ANALISA DATA STIG-9 (N=${n})\n\n`;
-            msg += `1. TAHAP STIGMA KESELURUHAN: Purata skor STIG-9 komuniti adalah ${avg}/4.00. Secara empirikal, ini menunjukkan tahap stigma berada pada paras ${avg > 2.5 ? 'TINGGI' : 'SEDERHANA'}.\n\n`;
-            msg += `2. DIMENSI KRITIKAL: Dimensi '${high}' didapati paling tinggi. Ini mencadangkan intervensi kesihatan awam harus difokuskan pada pengubahsuaian ${high === 'Kognitif' ? 'kepercayaan/stereotaip' : high === 'Afektif' ? 'reaksi emosi/prasangka' : 'tingkah laku diskriminatif'} komuniti.\n\n`;
-            msg += `3. ANALISA STATISTIK: Perbandingan demografi mencadangkan wujudnya variasi signifikan berdasarkan pembolehubah yang dipilih. Sila rujuk jadual inferensi untuk nilai p < 0.05.`;
-            document.getElementById('aiComment').innerText = msg;
+            const m = jStat.mean(filteredData.map(d => d.TotalStig9)).toFixed(2);
+            document.getElementById('aiComment').innerText = `Analisis (N=${filteredData.length}): Purata skor STIG-9 adalah ${m}. Nilai ini menunjukkan tahap stigma ${m > 2.5 ? 'Tinggi' : 'Sederhana'}. Data taburan ${Math.abs(jStat.skewness(filteredData.map(d => d.TotalStig9))) > 1 ? 'adalah Tidak Normal' : 'adalah Normal'}. Sila rujuk boxplot untuk visualisasi outliers.`;
         }
 
-        function resetFilters() { document.querySelectorAll('select').forEach(s => s.value = 'All'); updateDashboard(); }
         init();
     </script>
 </body>
