@@ -152,35 +152,67 @@
 
         const colMap = { 
             jantina: "Jantina", umur: "Umur", bangsa: "Bangsa", agama: "Agama", 
-            pendidikan: "Tahap Pendidikan", pekerjaan: "Pekerjaan", timestamp: "Timestamp (Tarikh/Masa)" 
+            pendidikan: "Tahap Pendidikan", pekerjaan: "Pekerjaan", timestamp: "Timestamp" 
         };
 
         let raw = []; let filteredData = []; let charts = {}; let zoomChartRef = null;
         Chart.register(ChartDataLabels);
 
-        async function init() {
-            try {
-                const res = await fetch(csvUrl);
-                const txt = await res.text();
-                Papa.parse(txt, {
-                    header: true, dynamicTyping: true, skipEmptyLines: true,
-                    complete: (p) => {
-                        raw = p.data.filter(d => d[colMap.timestamp]).map(d => {
-                            const age = parseFloat(d[colMap.umur]) || 0;
+        function init() {
+            document.getElementById('updateTime').innerText = "Sedang Muat Turun Data...";
+            
+            // Menggunakan PapaParse "download:true" yang lebih selamat (bypass masalah basic fetch)
+            Papa.parse(csvUrl, {
+                download: true,
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                complete: (p) => {
+                    try {
+                        const gCol = (row, ...names) => {
+                            for(let n of names) { if(row[n] !== undefined) return row[n]; }
+                            return undefined;
+                        };
+
+                        raw = p.data.filter(d => gCol(d, "timestamp", "Timestamp", "Timestamp (Tarikh/Masa)")).map(d => {
+                            const age = parseFloat(gCol(d, "umur", "Umur", "UMUR")) || 0;
                             let group = age <= 15 ? "0-15 Thn" : age <= 30 ? "16-30 Thn" : age <= 59 ? "31-59 Thn" : "60+ Thn";
-                            const q = (n) => parseFloat(d['Q'+n]) || 0;
+                            
+                            const q = (n) => parseFloat(gCol(d, "Q"+n, "q"+n)) || 0;
+                            
                             return { 
-                                ...d, UmurGroup: group, 
-                                Afektif: (q(1)+q(9))/2, Kognitif: (q(5)+q(6)+q(8))/3, 
-                                TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9,
-                                DateParsed: new Date(d[colMap.timestamp])
+                                ...d, 
+                                Jantina: gCol(d, "jantina", "Jantina", "JANTINA") || "TIDAK NYATA",
+                                Umur: age,
+                                UmurGroup: group, 
+                                Bangsa: gCol(d, "bangsa", "Bangsa", "BANGSA") || "TIDAK NYATA",
+                                Agama: gCol(d, "agama", "Agama", "AGAMA") || "TIDAK NYATA",
+                                "Tahap Pendidikan": gCol(d, "pendidikan", "Tahap Pendidikan", "Pendidikan") || "TIDAK NYATA",
+                                Pekerjaan: gCol(d, "pekerjaan", "Pekerjaan", "PEKERJAAN") || "TIDAK NYATA",
+                                Afektif: (q(1)+q(9))/2, 
+                                Kognitif: (q(5)+q(6)+q(8))/3, 
+                                TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, 
+                                TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9,
+                                DateParsed: new Date(gCol(d, "timestamp", "Timestamp", "Timestamp (Tarikh/Masa)"))
                             };
                         });
-                        setupFilters(); populateSubGroups(); updateDashboard();
-                        document.getElementById('updateTime').innerText = `Update: ${new Date().toLocaleTimeString('ms-MY')}`;
+
+                        if (raw.length === 0) {
+                            alert("Walaupun borang sedang dihubungkan, tiada datanya berjaya dicerap (Kosong).\nSila pastikan Google Sheet borang anda sememangnya mempunyai data (jantina, umur, dsb).");
+                        } else {
+                            setupFilters(); populateSubGroups(); updateDashboard();
+                            document.getElementById('updateTime').innerText = `Update: ${new Date().toLocaleTimeString('ms-MY')}`;
+                        }
+                    } catch(parseErr) {
+                        alert("Ralat memproses logik matematik data ke dashboard. Rujuk browser Console (Tekan F12).");
+                        console.error("Ralat pemprosesan logikal:", parseErr);
                     }
-                });
-            } catch (e) { alert("Masalah rangkaian. Sila cuba lagi."); }
+                },
+                error: (err) => {
+                    alert("Gagal memuat turun fail dari Google Sheets. Pastikan 'File>Share>Publish To Web' telah dibuat dengan betul. Jika anda test ini dari folder PC, cuba muat naik online ke Github pages untuk bacaan selamat Google.");
+                    console.error("Ralat PapaParse / Rangkaian Browser mematikan CORS:", err);
+                }
+            });
         }
 
         function setupFilters() {
@@ -204,8 +236,11 @@
         }
 
         function updateDashboard() {
-            const start = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value) : null;
-            const end = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value) : null;
+            let start = document.getElementById('dateStart') ? document.getElementById('dateStart').value : null;
+            start = start ? new Date(start) : null;
+            let end = document.getElementById('dateEnd') ? document.getElementById('dateEnd').value : null;
+            end = end ? new Date(end) : null;
+            
             filteredData = raw.filter(d => {
                 let ok = true;
                 if(start && d.DateParsed < start) ok = false;
@@ -266,7 +301,6 @@
                     options: { 
                         responsive: true, maintainAspectRatio: false,
                         plugins: {
-                            // Tutup lagenda jika ia carta bar untuk elak 'undefined'
                             legend: { display: original.config.type !== 'bar', position: 'bottom', labels: { font: { size: 14, weight: 'bold' } } },
                             datalabels: { color: '#000', font: { size: 16, weight: 'bold' }, anchor: 'end', align: 'start' }
                         }
@@ -279,7 +313,7 @@
         function renderStigAnalysis() {
             const tbody = document.getElementById('stigItemRows'); tbody.innerHTML = '';
             for(let i=1; i<=9; i++) {
-                const v = filteredData.map(d => parseFloat(d['Q'+i]) || 0);
+                const v = filteredData.map(d => parseFloat(d['Q'+i]!==undefined ? d['Q'+i] : d['q'+i]) || 0);
                 const sk = jStat.skewness(v);
                 tbody.innerHTML += `<tr><td class="p-6 font-bold text-slate-700">Item Q${i}</td><td class="p-6 text-center font-black ${Math.abs(sk)>1?'text-red-500':'text-emerald-500'}">${sk.toFixed(2)}</td><td class="p-6 text-center font-bold">${jStat.mean(v).toFixed(2)} (${jStat.stdev(v).toFixed(2)})</td><td class="p-6 text-center text-slate-400">${jStat.median(v).toFixed(2)} (${(jStat.quartiles(v)[2]-jStat.quartiles(v)[0]).toFixed(2)})</td></tr>`;
             }
@@ -320,6 +354,7 @@
 
         function generateAIReport() {
             const n = filteredData.length;
+            if(n === 0) return;
             const m = jStat.mean(filteredData.map(d => d.TotalStig9)).toFixed(2);
             const highDim = ['Afektif', 'Kognitif', 'TingkahLaku'].sort((a,b) => jStat.mean(filteredData.map(x => x[b])) - jStat.mean(filteredData.map(x => x[a])))[0];
             
@@ -333,6 +368,8 @@
 
         function closeModal() { document.getElementById('chartModal').style.display = "none"; if(zoomChartRef) zoomChartRef.destroy(); }
         function resetFilters() { document.querySelectorAll('select').forEach(s => s.value = 'All'); updateDashboard(); }
+        
+        // Mulakan dashboard
         init();
     </script>
 </body>
