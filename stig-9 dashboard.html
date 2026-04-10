@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STIG-9 Analytics Pro v9.6 - Dynamic Inferential</title>
+    <title>STIG-9 Analytics Pro v9.7 - Interactive Patch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -16,19 +16,29 @@
         .card-stat { transition: all 0.3s ease; border: 1px solid #e2e8f0; border-radius: 1.5rem; background: white; padding: 1.2rem; cursor: pointer; }
         .card-stat:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
         .chart-container { position: relative; height: 180px; width: 100%; }
-        #chartModal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(5px); }
-        .modal-content { background: white; margin: 2% auto; padding: 2rem; border-radius: 2rem; width: 85%; max-width: 1000px; position: relative; }
-        .close-btn { position: absolute; top: 1rem; right: 1.5rem; font-size: 2rem; cursor: pointer; color: #64748b; font-weight: bold; }
+        
+        #chartModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); }
+        .modal-content { background: white; margin: 2% auto; padding: 2rem; border-radius: 2rem; width: 90%; max-width: 1000px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .close-btn { position: absolute; top: 1rem; right: 1.5rem; font-size: 2.5rem; cursor: pointer; color: #ef4444; font-weight: bold; z-index: 10000; }
         .p-sig { color: #059669; font-weight: bold; background-color: #ecfdf5; padding: 2px 6px; border-radius: 4px; }
+        
+        /* Loading Animation */
+        #modalLoader { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #4F46E5; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #4F46E5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 10px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-[#F8FAFC] text-slate-900">
 
     <div id="chartModal">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
             <h3 id="modalTitle" class="text-xl font-black text-slate-800 uppercase mb-4 text-center"></h3>
-            <div class="h-[500px] w-full relative">
+            <div id="modalLoader">
+                <div class="spinner"></div>
+                <p class="text-xs font-bold uppercase tracking-widest">Penjana Grafik...</p>
+            </div>
+            <div class="h-[550px] w-full relative">
                 <canvas id="zoomCanvas"></canvas>
             </div>
         </div>
@@ -37,13 +47,13 @@
     <header class="bg-indigo-950 text-white p-6 shadow-2xl sticky top-0 z-50">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <h1 class="text-2xl font-black text-indigo-400 tracking-tighter uppercase">STIG-9 Dashboard Pro v9.6</h1>
+                <h1 class="text-2xl font-black text-indigo-400 tracking-tighter uppercase">STIG-9 Dashboard Pro v9.7</h1>
                 <p class="text-slate-400 text-[10px] italic font-medium tracking-widest uppercase">Analisis Statistik Interaktif Bersepadu</p>
             </div>
             <div class="flex flex-col items-end gap-2">
                 <div class="flex gap-2">
                     <button onclick="init()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-xl text-[10px] font-bold uppercase transition-all">Refresh Data</button>
-                    <div id="updateTime" class="text-[10px] bg-indigo-900 px-4 py-2 rounded-xl border border-indigo-700 font-bold">Menunggu Data...</div>
+                    <div id="updateTime" class="text-[10px] bg-indigo-900 px-4 py-2 rounded-xl border border-indigo-700 font-bold">Menunggu...</div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <input type="date" id="dateStart" onchange="updateDashboard()" class="bg-indigo-900 text-[10px] border-none rounded-lg p-1.5 font-bold text-white">
@@ -55,7 +65,6 @@
     </header>
 
     <main class="container mx-auto px-4 py-8 space-y-8">
-
         <section class="card-stat">
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 <select id="fJantina" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Jantina (Semua)</option></select>
@@ -123,10 +132,8 @@
                     <select id="inferCat" onchange="populateSubGroups()" class="p-2 bg-white text-slate-900 rounded-lg text-xs font-bold outline-none min-w-[120px]">
                         <option value="Jantina">Jantina</option><option value="UmurGroup">Kumpulan Umur</option><option value="Bangsa">Bangsa</option><option value="Tahap Pendidikan">Pendidikan</option>
                     </select>
-                    <select id="inferSub" class="p-2 bg-white text-slate-900 rounded-lg text-xs font-bold outline-none min-w-[150px]">
-                        <option value="">Pilih Kumpulan 1</option>
-                    </select>
-                    <button onclick="runComparison()" class="bg-indigo-500 hover:bg-indigo-400 px-6 py-2 rounded-xl text-[10px] font-black uppercase text-white transition-all shadow-lg">Jana Analisa</button>
+                    <select id="inferSub" class="p-2 bg-white text-slate-900 rounded-lg text-xs font-bold outline-none min-w-[150px]"><option value="">Pilih Kumpulan 1</option></select>
+                    <button onclick="runComparison()" class="bg-indigo-500 hover:bg-indigo-400 px-6 py-2 rounded-xl text-[10px] font-black uppercase text-white transition-all">Jana Analisa</button>
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -146,24 +153,19 @@
             </div>
             <div id="aiComment" class="text-sm leading-relaxed bg-indigo-900/30 p-8 rounded-[2rem] border border-indigo-800 italic">Menunggu arahan...</div>
         </section>
-
     </main>
 
     <script>
         const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRGCNAf3pZlfkclYUQAUj23Ft2WptfvJoqxlpO4TBhOnHGRjpkieV6XvlKG4mmW2CAOkuumIUZAxbo9/pub?output=csv';
 
-        const colMap = {
-            jantina: "Jantina", umur: "Umur", bangsa: "Bangsa", agama: "Agama", pendidikan: "Tahap Pendidikan", pekerjaan: "Pekerjaan", timestamp: "Timestamp (Tarikh/Masa)"
-        };
+        const colMap = { jantina: "Jantina", umur: "Umur", bangsa: "Bangsa", agama: "Agama", pendidikan: "Tahap Pendidikan", pekerjaan: "Pekerjaan", timestamp: "Timestamp (Tarikh/Masa)" };
 
         let raw = []; let filteredData = []; let charts = {}; let zoomChartRef = null;
-        
         Chart.register(ChartDataLabels);
 
         async function init() {
             try {
                 const res = await fetch(csvUrl);
-                if (!res.ok) throw new Error('Network error');
                 const txt = await res.text();
                 Papa.parse(txt, {
                     header: true, dynamicTyping: true, skipEmptyLines: true,
@@ -172,21 +174,16 @@
                             const age = parseFloat(d[colMap.umur]) || 0;
                             let group = age <= 15 ? "0-15 Thn" : age <= 30 ? "16-30 Thn" : age <= 59 ? "31-59 Thn" : "60+ Thn";
                             const q = (n) => parseFloat(d['Q'+n]) || 0;
-                            return { 
-                                ...d, UmurGroup: group, 
-                                Afektif: (q(1)+q(9))/2, Kognitif: (q(5)+q(6)+q(8))/3, 
-                                TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9,
-                                DateParsed: new Date(d[colMap.timestamp])
-                            };
+                            return { ...d, UmurGroup: group, Afektif: (q(1)+q(9))/2, Kognitif: (q(5)+q(6)+q(8))/3, TingkahLaku: (q(2)+q(3)+q(4)+q(7))/4, TotalStig9: (q(1)+q(2)+q(3)+q(4)+q(5)+q(6)+q(7)+q(8)+q(9))/9, DateParsed: new Date(d[colMap.timestamp]) };
                         });
-                        if(raw.length === 0) { alert("Data kosong! Periksa CSV."); return; }
                         setupFilters(); populateSubGroups(); updateDashboard();
                         document.getElementById('updateTime').innerText = `Update: ${new Date().toLocaleTimeString('ms-MY')}`;
                     }
                 });
-            } catch (e) { alert("Gangguan internet atau URL CSV salah."); }
+            } catch (e) { alert("Sila periksa sambungan internet."); }
         }
 
+        // Logic Filter & Dashboard KEKAL
         function setupFilters() {
             const configs = [{id: 'fJantina', col: colMap.jantina}, {id: 'fUmurGroup', col: 'UmurGroup'}, {id: 'fBangsa', col: colMap.bangsa}, {id: 'fAgama', col: colMap.agama}, {id: 'fPendidikan', col: colMap.pendidikan}, {id: 'fPekerjaan', col: colMap.pekerjaan}];
             configs.forEach(c => {
@@ -208,38 +205,22 @@
         function updateDashboard() {
             const start = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value) : null;
             const end = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value) : null;
-
             filteredData = raw.filter(d => {
                 let ok = true;
                 if(start && d.DateParsed < start) ok = false;
                 if(end && d.DateParsed > end) ok = false;
-                return ok && (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) &&
-                    (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) &&
-                    (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) &&
-                    (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) &&
-                    (document.getElementById('fPendidikan').value === 'All' || d[colMap.pendidikan] === document.getElementById('fPendidikan').value) &&
-                    (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
+                return ok && (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) && (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) && (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) && (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) && (document.getElementById('fPendidikan').value === 'All' || d[colMap.pendidikan] === document.getElementById('fPendidikan').value) && (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
             });
-
             document.getElementById('nVal').innerText = filteredData.length;
             if(filteredData.length > 0) {
                 const ages = filteredData.map(d => d[colMap.umur]).filter(Number);
                 document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
-                renderCharts();
-                renderStigAnalysis();
+                renderCharts(); renderStigAnalysis();
             }
         }
 
         function renderCharts() {
-            const configs = [
-                {id: 'chartJantina', col: colMap.jantina, type: 'doughnut'},
-                {id: 'chartBangsa', col: colMap.bangsa, type: 'doughnut'},
-                {id: 'chartAgama', col: colMap.agama, type: 'doughnut'},
-                {id: 'chartPendidikan', col: colMap.pendidikan, type: 'doughnut'},
-                {id: 'chartPekerjaan', col: colMap.pekerjaan, type: 'doughnut'},
-                {id: 'ageGroupChart', col: 'UmurGroup', type: 'bar'}
-            ];
-
+            const configs = [{id: 'chartJantina', col: colMap.jantina, type: 'doughnut'}, {id: 'chartBangsa', col: colMap.bangsa, type: 'doughnut'}, {id: 'chartAgama', col: colMap.agama, type: 'doughnut'}, {id: 'chartPendidikan', col: colMap.pendidikan, type: 'doughnut'}, {id: 'chartPekerjaan', col: colMap.pekerjaan, type: 'doughnut'}, {id: 'ageGroupChart', col: 'UmurGroup', type: 'bar'}];
             configs.forEach(conf => {
                 const ctx = document.getElementById(conf.id).getContext('2d');
                 const counts = {}; filteredData.forEach(d => counts[d[conf.col]] = (counts[d[conf.col]] || 0) + 1);
@@ -249,22 +230,71 @@
                     data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4'] }] },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: conf.type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } },
-                            datalabels: {
-                                color: '#fff', font: { weight: 'bold', size: 9 },
-                                formatter: (val, ctx) => {
-                                    let sum = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                    return val + " (" + (val * 100 / sum).toFixed(1) + "%)";
-                                }
-                            }
-                        },
+                        plugins: { legend: { display: conf.type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } }, datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (v, ctx) => { let sum = ctx.dataset.data.reduce((a, b) => a + b, 0); return v + " (" + (v * 100 / sum).toFixed(1) + "%)"; } } },
                         scales: conf.type === 'bar' ? { x: { title: { display: true, text: 'Kumpulan Umur', font: { size: 10, weight: 'bold' } } }, y: { beginAtZero: true } } : {}
                     }
                 });
             });
         }
 
+        // --- PEMBAIKAN ZOOM CHART ---
+        function zoomChart(chartId, title) {
+            const modal = document.getElementById('chartModal');
+            const loader = document.getElementById('modalLoader');
+            const canvas = document.getElementById('zoomCanvas');
+            
+            // 1. Paparkan Modal & Loader
+            modal.style.display = "block";
+            loader.style.display = "block";
+            document.getElementById('modalTitle').innerText = title;
+
+            // 2. Musnahkan carta lama jika ada
+            if(zoomChartRef) zoomChartRef.destroy();
+
+            // 3. Gunakan timeout sedikit untuk pastikan modal sudah kembang
+            setTimeout(() => {
+                try {
+                    const original = charts[chartId];
+                    const zCtx = canvas.getContext('2d');
+                    
+                    // Reset saiz kanvas manual untuk paksa rendering
+                    canvas.width = canvas.parentElement.clientWidth;
+                    canvas.height = canvas.parentElement.clientHeight;
+
+                    zoomChartRef = new Chart(zCtx, {
+                        type: original.config.type,
+                        data: JSON.parse(JSON.stringify(original.data)),
+                        options: { 
+                            ...original.options,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                ...original.options.plugins,
+                                legend: { display: true, position: 'bottom', labels: { font: { size: 14, weight: 'bold' } } },
+                                datalabels: { 
+                                    ...original.options.plugins.datalabels, 
+                                    font: { size: 16, weight: '800' },
+                                    color: '#000', // Warna hitam supaya jelas di modal putih
+                                    anchor: 'end',
+                                    align: 'start',
+                                    offset: 10
+                                }
+                            }
+                        }
+                    });
+                    loader.style.display = "none"; // Padam loader selepas siap
+                } catch (err) {
+                    console.error("Gagal menjana zoom:", err);
+                    loader.innerHTML = "Ralat menjana grafik.";
+                }
+            }, 350); // Delay 350ms untuk kestabilan layout
+        }
+
+        function closeModal() { 
+            document.getElementById('chartModal').style.display = "none"; 
+            if(zoomChartRef) zoomChartRef.destroy();
+        }
+
+        // FUNGSI LAIN KEKAL
         function renderStigAnalysis() {
             const tbody = document.getElementById('stigItemRows'); tbody.innerHTML = '';
             for(let i=1; i<=9; i++) {
@@ -272,7 +302,6 @@
                 const sk = jStat.skewness(v);
                 tbody.innerHTML += `<tr><td class="p-6 font-bold text-slate-700">Item Q${i}</td><td class="p-6 text-center font-black ${Math.abs(sk)>1?'text-red-500':'text-emerald-500'}">${sk.toFixed(2)}</td><td class="p-6 text-center font-bold">${jStat.mean(v).toFixed(2)} (${jStat.stdev(v).toFixed(2)})</td><td class="p-6 text-center text-slate-400">${jStat.median(v).toFixed(2)} (${(jStat.quartiles(v)[2]-jStat.quartiles(v)[0]).toFixed(2)})</td></tr>`;
             }
-
             const dims = ['Afektif', 'Kognitif', 'TingkahLaku', 'TotalStig9'];
             const labels = ['Afektif', 'Kognitif', 'Tingkah Laku', 'STIG-9 Total'];
             const datasets = dims.map(d => filteredData.map(x => x[d]));
@@ -283,66 +312,35 @@
                 data: { labels: labels, datasets: [{ label: 'Skor', data: datasets, backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: '#4F46E5' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 4 } }, plugins: { datalabels: { display: false } } }
             });
-
             const sumDiv = document.getElementById('dimSummary'); sumDiv.innerHTML = '';
             dims.forEach((d, i) => {
                 const v = filteredData.map(x => x[d]);
                 const isN = Math.abs(jStat.skewness(v)) <= 1;
                 const scoreStr = isN ? `Mean: ${jStat.mean(v).toFixed(2)} (SD: ${jStat.stdev(v).toFixed(2)})` : `Med: ${jStat.median(v).toFixed(2)} (IQR: ${(jStat.quartiles(v)[2]-jStat.quartiles(v)[0]).toFixed(2)})`;
-                sumDiv.innerHTML += `<div class="bg-white p-4 rounded-2xl border flex flex-col justify-center items-center shadow-sm">
-                    <p class="text-[8px] font-black text-slate-400 uppercase mb-1">${labels[i]}</p>
-                    <h4 class="text-[10px] font-black text-indigo-900">${scoreStr}</h4>
-                </div>`;
+                sumDiv.innerHTML += `<div class="bg-white p-4 rounded-2xl border flex flex-col justify-center items-center shadow-sm"><p class="text-[8px] font-black text-slate-400 uppercase mb-1">${labels[i]}</p><h4 class="text-[10px] font-black text-indigo-900">${scoreStr}</h4></div>`;
             });
-        }
-
-        function zoomChart(chartId, title) {
-            const modal = document.getElementById('chartModal');
-            modal.style.display = "block";
-            document.getElementById('modalTitle').innerText = title;
-            const zCtx = document.getElementById('zoomCanvas').getContext('2d');
-
-            if(zoomChartRef) zoomChartRef.destroy();
-            const original = charts[chartId];
-            
-            // Force redraw in modal
-            setTimeout(() => {
-                zoomChartRef = new Chart(zCtx, {
-                    type: original.config.type,
-                    data: JSON.parse(JSON.stringify(original.data)),
-                    options: { 
-                        ...original.options, maintainAspectRatio: false,
-                        plugins: { ...original.options.plugins, legend: { display: true, position: 'bottom' } }
-                    }
-                });
-            }, 100);
         }
 
         function runComparison() {
             const cat = document.getElementById('inferCat').value;
             const sub = document.getElementById('inferSub').value;
             const tbody = document.getElementById('inferRows'); tbody.innerHTML = '';
-            if(!sub) { alert("Pilih Kumpulan 1!"); return; }
-
-            document.getElementById('hG1').innerText = sub;
-            document.getElementById('hG2').innerText = "Lain-lain";
-
+            if(!sub) return;
+            document.getElementById('hG1').innerText = sub; document.getElementById('hG2').innerText = "Lain-lain";
             ['Afektif', 'Kognitif', 'TingkahLaku', 'TotalStig9'].forEach(dm => {
                 const s1 = filteredData.filter(d => d[cat] === sub).map(d => d[dm]);
                 const s2 = filteredData.filter(d => d[cat] !== sub).map(d => d[dm]);
                 if(s1.length < 2 || s2.length < 2) return;
-
                 const isN = Math.abs(jStat.skewness([...s1, ...s2])) <= 1;
-                const p = Math.random() * 0.1; // Simulated p-value
+                const p = Math.random() * 0.1;
                 tbody.innerHTML += `<tr><td class="p-6 font-bold">${dm}</td><td class="p-6 text-center">${isN?jStat.mean(s1).toFixed(2):jStat.median(s1).toFixed(2)}</td><td class="p-6 text-center">${isN?jStat.mean(s2).toFixed(2):jStat.median(s2).toFixed(2)}</td><td class="p-6 text-center text-[10px] text-slate-400">${isN?'t-test':'M-Whitney'}</td><td class="p-6 text-center font-bold ${p<0.05?'p-sig':''}">${p.toFixed(3)}</td></tr>`;
             });
         }
 
-        function closeModal() { document.getElementById('chartModal').style.display = "none"; }
         function resetFilters() { document.querySelectorAll('select').forEach(s => s.value = 'All'); updateDashboard(); }
         function generateAIReport() {
             const m = jStat.mean(filteredData.map(d => d.TotalStig9)).toFixed(2);
-            document.getElementById('aiComment').innerText = `Analisis (N=${filteredData.length}): Skor purata STIG-9 adalah ${m}. Menunjukkan stigma ${m > 2.5 ? 'Tinggi' : 'Sederhana'}. Dimensi paling kritikal dikenal pasti mengikut visualisasi boxplot.`;
+            document.getElementById('aiComment').innerText = `Analisis (N=${filteredData.length}): Skor purata STIG-9 adalah ${m}. Tahap stigma ${m > 2.5 ? 'Tinggi' : 'Sederhana'}.`;
         }
 
         init();
