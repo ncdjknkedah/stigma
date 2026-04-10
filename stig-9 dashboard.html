@@ -15,7 +15,6 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .card-stat { transition: all 0.3s ease; border: 1px solid #e2e8f0; border-radius: 1.5rem; background: white; padding: 1.2rem; cursor: pointer; }
         .card-stat:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        /* TELAH DIKEMASKINI: Tinggi graf dinaikkan ke 250px agar label tidak terpotong */
         .chart-container { position: relative; height: 250px; width: 100%; }
         #chartModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); }
         .modal-content { background: white; margin: 2% auto; padding: 2rem; border-radius: 2rem; width: 90%; max-width: 1000px; position: relative; }
@@ -56,31 +55,36 @@
         
         <section class="card-stat">
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                <select id="fJantina" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Jantina (Semua)</option></select>
-                <select id="fUmurGroup" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Umur (Semua)</option></select>
-                <select id="fBangsa" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Bangsa (Semua)</option></select>
-                <select id="fAgama" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Agama (Semua)</option></select>
-                <select id="fPendidikan" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Pendidikan (Semua)</option></select>
-                <select id="fPekerjaan" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"><option value="All">Pekerjaan (Semua)</option></select>
+                <select id="fJantina" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"></select>
+                <select id="fUmurGroup" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"></select>
+                <select id="fBangsa" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"></select>
+                <select id="fAgama" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"></select>
+                <select id="fPendidikan" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"></select>
+                <select id="fPekerjaan" onchange="updateDashboard()" class="p-3 bg-slate-50 border rounded-xl text-xs font-bold outline-none"></select>
                 <button onclick="resetFilters()" class="p-3 bg-slate-200 hover:bg-slate-300 rounded-xl text-xs font-black uppercase tracking-widest">Reset</button>
             </div>
         </section>
 
+        <!-- SUSUNAN BARU: Kad dijadikan flex-center agar angka statik berada di bahagian tengah -->
         <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="card-stat border-l-8 border-l-indigo-500 text-center">
+            <div class="card-stat border-l-8 border-l-indigo-500 flex flex-col justify-center items-center text-center h-full">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Jumlah Responden (N)</p>
-                <h3 id="nVal" class="text-5xl font-black text-indigo-900">0</h3>
+                <h3 id="nVal" class="text-6xl font-black text-indigo-900 mt-2">0</h3>
             </div>
-            <div class="card-stat border-l-8 border-l-emerald-500 text-center">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Purata Umur (SD)</p>
-                <h3 id="ageStats" class="text-3xl font-black text-slate-800">0.0 (0.0)</h3>
+            
+            <!-- KOSMETIK UMUR: Tambahan Min(SD), Med(IQR) & Julat -->
+            <div class="card-stat border-l-8 border-l-emerald-500 flex flex-col justify-center items-center text-center h-full">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Statistik Umur</p>
+                <div id="ageStats" class="flex flex-col items-center">
+                    <span class="text-2xl font-black text-slate-800">0.0 (0.0)</span>
+                </div>
             </div>
+
             <div class="card-stat" onclick="zoomChart('ageGroupChart', 'Taburan Kumpulan Umur')">
                 <div class="chart-container"><canvas id="ageGroupChart"></canvas></div>
             </div>
         </section>
 
-        <!-- TELAH DIKEMASKINI: xl:grid-cols-5 melebarkan sedikit pandangan di laptop besar untuk elak tersekat -->
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div class="card-stat" onclick="zoomChart('chartJantina', 'Taburan Jantina')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Jantina</p><div class="chart-container"><canvas id="chartJantina"></canvas></div></div>
             <div class="card-stat" onclick="zoomChart('chartBangsa', 'Taburan Bangsa')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Bangsa</p><div class="chart-container"><canvas id="chartBangsa"></canvas></div></div>
@@ -213,12 +217,22 @@
         }
 
         function setupFilters() {
-            const configs = [{id: 'fJantina', col: colMap.jantina}, {id: 'fUmurGroup', col: 'UmurGroup'}, {id: 'fBangsa', col: colMap.bangsa}, {id: 'fAgama', col: colMap.agama}, {id: 'fPendidikan', col: colMap.pendidikan}, {id: 'fPekerjaan', col: colMap.pekerjaan}];
+            // KEMASKINI: Ditambah 'labelTitle' supaya menjadi pengenalan di menu
+            const configs = [
+                {id: 'fJantina', col: colMap.jantina, labelTitle: 'Jantina'}, 
+                {id: 'fUmurGroup', col: 'UmurGroup', labelTitle: 'Kump. Umur'}, 
+                {id: 'fBangsa', col: colMap.bangsa, labelTitle: 'Bangsa'}, 
+                {id: 'fAgama', col: colMap.agama, labelTitle: 'Agama'}, 
+                {id: 'fPendidikan', col: colMap.pendidikan, labelTitle: 'Pendidikan'}, 
+                {id: 'fPekerjaan', col: colMap.pekerjaan, labelTitle: 'Pekerjaan'}
+            ];
+            
             configs.forEach(c => {
                 const sel = document.getElementById(c.id);
                 if(sel) {
                     const vals = [...new Set(raw.map(d => d[c.col]))].filter(Boolean).sort();
-                    sel.innerHTML = `<option value="All">Semua</option>`;
+                    // Menyatukan nama spesifik
+                    sel.innerHTML = `<option value="All">${c.labelTitle} (Semua)</option>`;
                     vals.forEach(v => sel.innerHTML += `<option value="${v}">${v}</option>`);
                 }
             });
@@ -238,9 +252,25 @@
                 return ok && (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) && (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) && (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) && (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) && (document.getElementById('fPendidikan').value === 'All' || d[colMap.pendidikan] === document.getElementById('fPendidikan').value) && (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
             });
             document.getElementById('nVal').innerText = filteredData.length;
+            
             if(filteredData.length > 0) {
                 const ages = filteredData.map(d => d[colMap.umur]).filter(Number);
-                document.getElementById('ageStats').innerText = `${jStat.mean(ages).toFixed(1)} (${jStat.stdev(ages).toFixed(1)})`;
+                if (ages.length > 0) {
+                    // PENGIRAAN: Lengkapkan statistik unjuran umur mengikut kemahuan
+                    const mean = jStat.mean(ages).toFixed(1);
+                    const sd = jStat.stdev(ages).toFixed(1);
+                    const median = jStat.median(ages).toFixed(1);
+                    const iqr = (jStat.quartiles(ages)[2] - jStat.quartiles(ages)[0]).toFixed(1);
+                    const min = Math.min(...ages);
+                    const max = Math.max(...ages);
+                    
+                    document.getElementById('ageStats').innerHTML = `
+                        <span class="text-2xl font-black text-slate-800 mt-1">Min: ${mean} <span class="text-sm">(${sd})</span></span>
+                        <span class="text-[13px] font-bold text-emerald-600 mt-1">Med: ${median} <span class="text-[11px]">(${iqr})</span></span>
+                        <span class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Julat: ${min} - ${max} Tahun</span>
+                    `;
+                }
+
                 renderCharts(); renderStigAnalysis();
             }
         }
@@ -261,21 +291,17 @@
                     data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4'] }] },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        // TAMBAHAN: Padding yang cukup beri ruang kepada graf agar tidak terpotong tepi dinding
                         layout: { padding: { top: 30, bottom: 20, left: 20, right: 20 } },
                         plugins: {
                             legend: { display: conf.type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
                             datalabels: { 
-                                // TAMBAHAN: Tetapan pintar untuk elak overlap (Bar warna gelap sikit, Pie warna putih)
                                 color: conf.type === 'bar' ? '#334155' : '#ffffff', 
                                 font: { weight: 'bold', size: 10 }, 
                                 textAlign: 'center',
                                 anchor: conf.type === 'bar' ? 'end' : 'center',
                                 align: conf.type === 'bar' ? 'end' : 'center',
-                                // Sembunyikan label 0
                                 display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
                                 formatter: (val, ctx) => {
-                                    // PENGIRAAN: Campuran Jumlah + Tambah simbol Peratus (%) terhad kepada 2 Dimensi.
                                     let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                     let percentage = (val * 100 / sum).toFixed(2) + "%";
                                     return `${val}\n(${percentage})`;
@@ -284,7 +310,6 @@
                         },
                         scales: conf.type === 'bar' ? { 
                             x: { title: { display: true, text: 'Kumpulan Umur', font: { size: 10, weight: 'bold' } } }, 
-                            // Dinaikkan maksimum Y-axis bar supaya label yang panjang tidak terpotong ke siling
                             y: { beginAtZero: true, suggestedMax: Math.max(...Object.values(counts)) * 1.3 } 
                         } : {}
                     }
