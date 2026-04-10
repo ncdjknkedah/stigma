@@ -15,7 +15,8 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .card-stat { transition: all 0.3s ease; border: 1px solid #e2e8f0; border-radius: 1.5rem; background: white; padding: 1.2rem; cursor: pointer; }
         .card-stat:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .chart-container { position: relative; height: 180px; width: 100%; }
+        /* TELAH DIKEMASKINI: Tinggi graf dinaikkan ke 250px agar label tidak terpotong */
+        .chart-container { position: relative; height: 250px; width: 100%; }
         #chartModal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); }
         .modal-content { background: white; margin: 2% auto; padding: 2rem; border-radius: 2rem; width: 90%; max-width: 1000px; position: relative; }
         .close-btn { position: absolute; top: 1rem; right: 1.5rem; font-size: 2.5rem; cursor: pointer; color: #ef4444; font-weight: bold; }
@@ -75,11 +76,12 @@
                 <h3 id="ageStats" class="text-3xl font-black text-slate-800">0.0 (0.0)</h3>
             </div>
             <div class="card-stat" onclick="zoomChart('ageGroupChart', 'Taburan Kumpulan Umur')">
-                <div class="chart-container h-32"><canvas id="ageGroupChart"></canvas></div>
+                <div class="chart-container"><canvas id="ageGroupChart"></canvas></div>
             </div>
         </section>
 
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- TELAH DIKEMASKINI: xl:grid-cols-5 melebarkan sedikit pandangan di laptop besar untuk elak tersekat -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <div class="card-stat" onclick="zoomChart('chartJantina', 'Taburan Jantina')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Jantina</p><div class="chart-container"><canvas id="chartJantina"></canvas></div></div>
             <div class="card-stat" onclick="zoomChart('chartBangsa', 'Taburan Bangsa')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Bangsa</p><div class="chart-container"><canvas id="chartBangsa"></canvas></div></div>
             <div class="card-stat" onclick="zoomChart('chartAgama', 'Taburan Agama')"><p class="text-[9px] font-black text-slate-400 uppercase mb-2 text-center">Agama</p><div class="chart-container"><canvas id="chartAgama"></canvas></div></div>
@@ -161,7 +163,6 @@
         function init() {
             document.getElementById('updateTime').innerText = "Sedang Muat Turun Data...";
             
-            // Menggunakan PapaParse "download:true" yang lebih selamat (bypass masalah basic fetch)
             Papa.parse(csvUrl, {
                 download: true,
                 header: true,
@@ -198,20 +199,16 @@
                         });
 
                         if (raw.length === 0) {
-                            alert("Walaupun borang sedang dihubungkan, tiada datanya berjaya dicerap (Kosong).\nSila pastikan Google Sheet borang anda sememangnya mempunyai data (jantina, umur, dsb).");
+                            alert("Tiada datanya berjaya dicerap (Kosong). Sila pastikan Sheet mempunyai jawapan ujian.");
                         } else {
                             setupFilters(); populateSubGroups(); updateDashboard();
                             document.getElementById('updateTime').innerText = `Update: ${new Date().toLocaleTimeString('ms-MY')}`;
                         }
                     } catch(parseErr) {
-                        alert("Ralat memproses logik matematik data ke dashboard. Rujuk browser Console (Tekan F12).");
                         console.error("Ralat pemprosesan logikal:", parseErr);
                     }
                 },
-                error: (err) => {
-                    alert("Gagal memuat turun fail dari Google Sheets. Pastikan 'File>Share>Publish To Web' telah dibuat dengan betul. Jika anda test ini dari folder PC, cuba muat naik online ke Github pages untuk bacaan selamat Google.");
-                    console.error("Ralat PapaParse / Rangkaian Browser mematikan CORS:", err);
-                }
+                error: (err) => console.error("Ralat muat turun PapaParse:", err)
             });
         }
 
@@ -236,15 +233,8 @@
         }
 
         function updateDashboard() {
-            let start = document.getElementById('dateStart') ? document.getElementById('dateStart').value : null;
-            start = start ? new Date(start) : null;
-            let end = document.getElementById('dateEnd') ? document.getElementById('dateEnd').value : null;
-            end = end ? new Date(end) : null;
-            
             filteredData = raw.filter(d => {
                 let ok = true;
-                if(start && d.DateParsed < start) ok = false;
-                if(end && d.DateParsed > end) ok = false;
                 return ok && (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) && (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) && (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) && (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) && (document.getElementById('fPendidikan').value === 'All' || d[colMap.pendidikan] === document.getElementById('fPendidikan').value) && (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
             });
             document.getElementById('nVal').innerText = filteredData.length;
@@ -264,17 +254,39 @@
             configs.forEach(conf => {
                 const ctx = document.getElementById(conf.id).getContext('2d');
                 const counts = {}; filteredData.forEach(d => counts[d[conf.col]] = (counts[d[conf.col]] || 0) + 1);
+                
                 if(charts[conf.id]) charts[conf.id].destroy();
                 charts[conf.id] = new Chart(ctx, {
                     type: conf.type,
                     data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#4F46E5','#10B981','#F59E0B','#EF4444','#8B5CF6','#06B6D4'] }] },
                     options: {
                         responsive: true, maintainAspectRatio: false,
+                        // TAMBAHAN: Padding yang cukup beri ruang kepada graf agar tidak terpotong tepi dinding
+                        layout: { padding: { top: 30, bottom: 20, left: 20, right: 20 } },
                         plugins: {
-                            legend: { display: conf.type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 8 } } },
-                            datalabels: { color: '#fff', font: { weight: 'bold', size: 9 }, formatter: (val, ctx) => val }
+                            legend: { display: conf.type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                            datalabels: { 
+                                // TAMBAHAN: Tetapan pintar untuk elak overlap (Bar warna gelap sikit, Pie warna putih)
+                                color: conf.type === 'bar' ? '#334155' : '#ffffff', 
+                                font: { weight: 'bold', size: 10 }, 
+                                textAlign: 'center',
+                                anchor: conf.type === 'bar' ? 'end' : 'center',
+                                align: conf.type === 'bar' ? 'end' : 'center',
+                                // Sembunyikan label 0
+                                display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
+                                formatter: (val, ctx) => {
+                                    // PENGIRAAN: Campuran Jumlah + Tambah simbol Peratus (%) terhad kepada 2 Dimensi.
+                                    let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    let percentage = (val * 100 / sum).toFixed(2) + "%";
+                                    return `${val}\n(${percentage})`;
+                                }
+                            }
                         },
-                        scales: conf.type === 'bar' ? { x: { title: { display: true, text: 'Kumpulan Umur', font: { size: 10, weight: 'bold' } } }, y: { beginAtZero: true } } : {}
+                        scales: conf.type === 'bar' ? { 
+                            x: { title: { display: true, text: 'Kumpulan Umur', font: { size: 10, weight: 'bold' } } }, 
+                            // Dinaikkan maksimum Y-axis bar supaya label yang panjang tidak terpotong ke siling
+                            y: { beginAtZero: true, suggestedMax: Math.max(...Object.values(counts)) * 1.3 } 
+                        } : {}
                     }
                 });
             });
@@ -300,10 +312,22 @@
                     data: { labels: [...original.data.labels], datasets: [{ ...original.data.datasets[0], data: [...original.data.datasets[0].data] }] },
                     options: { 
                         responsive: true, maintainAspectRatio: false,
+                        layout: { padding: 40 },
                         plugins: {
-                            legend: { display: original.config.type !== 'bar', position: 'bottom', labels: { font: { size: 14, weight: 'bold' } } },
-                            datalabels: { color: '#000', font: { size: 16, weight: 'bold' }, anchor: 'end', align: 'start' }
-                        }
+                            legend: { display: original.config.type !== 'bar', position: 'bottom', labels: { font: { size: 13, weight: 'bold' } } },
+                            datalabels: { 
+                                color: original.config.type === 'bar' ? '#334155' : '#ffffff', 
+                                font: { size: 14, weight: 'bold' }, textAlign: 'center',
+                                anchor: original.config.type === 'bar' ? 'end' : 'center',
+                                align: original.config.type === 'bar' ? 'end' : 'center',
+                                formatter: (val, ctx) => {
+                                    let sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    let percentage = (val * 100 / sum).toFixed(2) + "%";
+                                    return `${val}\n(${percentage})`;
+                                }
+                            }
+                        },
+                        scales: original.config.type === 'bar' ? { y: { suggestedMax: Math.max(...original.data.datasets[0].data) * 1.2 } } : {}
                     }
                 });
                 loader.style.display = "none";
@@ -369,7 +393,6 @@
         function closeModal() { document.getElementById('chartModal').style.display = "none"; if(zoomChartRef) zoomChartRef.destroy(); }
         function resetFilters() { document.querySelectorAll('select').forEach(s => s.value = 'All'); updateDashboard(); }
         
-        // Mulakan dashboard
         init();
     </script>
 </body>
