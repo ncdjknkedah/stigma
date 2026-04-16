@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Tema Hijau Epal - Kesedaran Kesihatan Mental */
             --primary: #78be20; 
             --primary-hover: #65a318;
             --bg-color: #f4fbef;
@@ -35,7 +34,6 @@
             padding: 40px;
             position: relative;
         }
-        /* Header Logo Section */
         .header-logo {
             text-align: center;
             margin-bottom: 30px;
@@ -54,7 +52,6 @@
             color: #1a1a1a;
             letter-spacing: 0.5px;
         }
-        
         .progress-container {
             width: 100%;
             background-color: #e5e7eb;
@@ -90,17 +87,12 @@
         .btn:hover { 
             background-color: var(--primary-hover);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(120, 190, 32, 0.2);
         }
-        .btn:active { transform: translateY(0); }
         .btn-outline {
             background-color: transparent;
             color: var(--primary);
             border: 2px solid var(--primary);
             padding: 12px 26px;
-        }
-        .btn-outline:hover {
-            background-color: #f7fee7;
         }
         .flex-between { display: flex; justify-content: space-between; gap: 10px; }
         .form-group { margin-bottom: 24px; }
@@ -138,26 +130,33 @@
             border-radius: 14px; 
             margin-bottom: 20px; 
             border: 1.5px solid #e5e7eb;
-            transition: transform 0.2s;
         }
-        .question-card:hover { border-color: var(--primary); }
         .bilingual-text { display: block; color: var(--text-muted); font-size: 14px; margin-top: 4px; font-weight: 400; }
-        .options-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+        .options-row { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 12px; 
+            margin-top: 18px; 
+        }
         .options-row label {
-            flex: 1; 
-            min-width: 150px; 
             font-weight: 500; 
             background: #fff; 
-            padding: 14px; 
+            padding: 10px; 
             border-radius: 10px;
             border: 1.5px solid #d1d5db; 
             cursor: pointer; 
             text-align: center; 
-            font-size: 14px; 
+            font-size: 13px; 
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
+            height: 75px; 
+            box-sizing: border-box;
+            width: 100%;
+        }
+        @media (max-width: 600px) {
+            .options-row { grid-template-columns: 1fr; }
         }
         .options-row input[type="radio"] { display: none; }
         .options-row label:hover { border-color: var(--primary); background-color: #f7fee7; }
@@ -166,7 +165,6 @@
             background: #f1f8eb; 
             color: var(--primary-hover); 
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(120, 190, 32, 0.1);
         }
         hr { border: none; border-top: 1px solid #f0f0f0; margin: 30px 0; }
     </style>
@@ -174,7 +172,6 @@
 <body>
 
 <div class="container">
-    <!-- Header with Jata Negara -->
     <div class="header-logo">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Coat_of_arms_of_Malaysia.svg/500px-Coat_of_arms_of_Malaysia.svg.png" alt="Jata Negara">
         <h3>KEMENTERIAN KESIHATAN MALAYSIA</h3>
@@ -185,7 +182,6 @@
     </div>
 
     <form id="surveyForm">
-        <!-- STEP 1: CONSENT -->
         <div class="step active" id="step1">
             <h2>Penerangan & Persetujuan <br><span class="bilingual-text" style="font-size:18px;">Information & Consent</span></h2>
             <p>Terima kasih kerana meluangkan masa. Tinjauan ini adalah kerjasama antara Unit Kawalan Penyakit Tidak Berjangkit, Jabatan Kesihatan Negeri Kedah dan Pusat Pengajian Teknologi, Multimedia, dan Komunikasi Universiti Utara Malaysia sebagai sebahagian daripada kerja kursus SCCAK2073 Perhubungan Awam. Ia bertujuan untuk mengukur tahap stigma terhadap kesihatan mental dalam kalangan masyarakat. Segala maklumat yang anda kongsikan adalah <strong>SULIT</strong> dan hanya digunakan untuk <strong>tujuan tinjauan ini sahaja</strong>.</p>
@@ -193,9 +189,9 @@
             
             <div class="form-group" style="margin-top: 30px;">
                 <label>Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree to continue with this survey?<span class="required-star">*</span></label>
-                <div class="options-row">
-                    <label><input type="radio" name="consent" value="Yes" required> <span>Ya / Yes</span></label>
-                    <label><input type="radio" name="consent" value="No"> <span>Tidak / No</span></label>
+                <div class="options-row" style="grid-template-columns: 1fr 1fr;">
+                    <label style="height: 60px;"><input type="radio" name="consent" value="Yes" required> <span>Ya / Yes</span></label>
+                    <label style="height: 60px;"><input type="radio" name="consent" value="No"> <span>Tidak / No</span></label>
                 </div>
             </div>
             <div class="flex-between">
@@ -204,7 +200,6 @@
             </div>
         </div>
 
-        <!-- STEP 2: DEMOGRAPHICS -->
         <div class="step" id="step2">
             <h2>BAHAGIAN A: DEMOGRAFI <br><span class="bilingual-text" style="font-size:18px;">SECTION A: DEMOGRAPHY</span></h2>
             
@@ -276,7 +271,6 @@
                 </select>
             </div>
 
-            <!-- New Geographic Fields -->
             <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label>Negeri / State<span class="required-star">*</span></label>
@@ -287,7 +281,7 @@
                 <div class="form-group">
                     <label>Daerah / District<span class="required-star">*</span></label>
                     <select name="daerah" id="daerahSelect" class="form-control" required disabled>
-                        <option value="">Pilih Negeri Dahulu / Select State First</option>
+                        <option value="">Pilih Negeri Dahulu</option>
                     </select>
                 </div>
             </div>
@@ -317,7 +311,6 @@
             </div>
         </div>
 
-        <!-- STEP 3: STIG-9 QUESTIONS -->
         <div class="step" id="step3">
             <h2>BAHAGIAN B: PROFIL STIGMA KOMUNITI (STIG-9)</h2>
             <p style="font-weight: 600;">SAYA RASA KEBANYAKAN ORANG... <br><span class="bilingual-text">I FEEL THAT MOST PEOPLE...</span></p>
@@ -331,7 +324,6 @@
             </div>
         </div>
 
-        <!-- STEP 4: THANK YOU -->
         <div class="step" id="step4" style="text-align: center; padding: 60px 0;">
             <img src="https://media.licdn.com/dms/image/D5612AQH6X1k0Y6Z5XQ/article-cover_image-shrink_600_2000/0/1691475850989?e=2147483647&v=beta&t=Zz7DnxXUpQpYv7T8v6s_KxYnU5uW9S9Z9v9W9_n_u50" alt="Hentikan Stigma Logo" style="width: 250px; height: auto; margin-bottom: 24px;">
             <h2 style="color: var(--primary);">Terima Kasih! / Thank You!</h2>
@@ -343,7 +335,6 @@
 </div>
 
 <script>
-    // DATA NEGERI DAN DAERAH (DISUSUN MENGIKUT ABJAD)
     const locationData = {
         "Johor": ["Batu Pahat", "Johor Bahru", "Kluang", "Kota Tinggi", "Kulai", "Mersing", "Muar", "Pontian", "Segamat", "Tangkak"],
         "Kedah": ["Baling", "Bandar Baharu", "Kota Setar", "Kuala Muda", "Kubang Pasu", "Kulim", "Langkawi", "Padang Terap", "Pendang", "Pokok Sena", "Sik", "Yan"],
@@ -363,33 +354,27 @@
         "W.P. Putrajaya": ["Putrajaya"]
     };
 
-    // Populate State Select
     const negeriSelect = document.getElementById('negeriSelect');
     const daerahSelect = document.getElementById('daerahSelect');
-    
-    // Sort and Populate
     Object.keys(locationData).sort().forEach(state => {
         const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
+        option.value = state; option.textContent = state;
         negeriSelect.appendChild(option);
     });
 
     function updateDaerah() {
         const selectedState = negeriSelect.value;
         daerahSelect.innerHTML = '<option value="">Pilih / Select</option>';
-        
         if (selectedState) {
             daerahSelect.disabled = false;
             locationData[selectedState].sort().forEach(district => {
                 const option = document.createElement('option');
-                option.value = district;
-                option.textContent = district;
+                option.value = district; option.textContent = district;
                 daerahSelect.appendChild(option);
             });
         } else {
             daerahSelect.disabled = true;
-            daerahSelect.innerHTML = '<option value="">Pilih Negeri Dahulu / Select State First</option>';
+            daerahSelect.innerHTML = '<option value="">Pilih Negeri Dahulu</option>';
         }
     }
 
@@ -422,86 +407,62 @@
 
     let currentStep = 1;
     function updateProgress() {
-        // We have 3 active steps for progress calc
         document.getElementById('progressBar').style.width = ((currentStep-1)/3)*100 + '%';
     }
 
     function nextStep(step) {
         const currentStepEl = document.getElementById('step'+step);
         const requiredElements = currentStepEl.querySelectorAll('[required]');
-        
         let isValid = true;
         requiredElements.forEach(el => {
             if (el.type === 'radio') {
                 const name = el.name;
                 if (!document.querySelector(`input[name="${name}"]:checked`)) isValid = false;
-            } else if (!el.value) {
-                isValid = false;
-                el.style.borderColor = '#ef4444'; 
-            } else {
-                el.style.borderColor = '#d1d5db';
-            }
+            } else if (!el.value) { isValid = false; el.style.borderColor = '#ef4444'; }
+            else { el.style.borderColor = '#d1d5db'; }
         });
 
         if (!isValid) {
-            alert("ANDA BELUM MENJAWAB SEMUA SOALAN <br>You haven't answered all the questions yet. ");
+            alert("ANDA BELUM MENJAWAB SEMUA SOALAN\n\nYou haven't answered all the questions yet.");
             return;
         }
 
         if (step === 1) {
             const consent = document.querySelector('input[name="consent"]:checked').value;
-            if (consent === "No") {
-                alert("Anda tidak bersetuju. Terima kasih.");
-                return;
-            }
+            if (consent === "No") { alert("Anda tidak bersetuju. Terima kasih."); return; }
         }
 
         currentStepEl.classList.remove('active');
-        currentStep++;
-        document.getElementById('step'+currentStep).classList.add('active');
-        updateProgress();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        currentStep++; document.getElementById('step'+currentStep).classList.add('active');
+        updateProgress(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function prevStep(step) {
         document.getElementById('step'+step).classList.remove('active');
-        currentStep--;
-        document.getElementById('step'+currentStep).classList.add('active');
-        updateProgress();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        currentStep--; document.getElementById('step'+currentStep).classList.add('active');
+        updateProgress(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.getElementById('surveyForm').onsubmit = function(e) {
         e.preventDefault();
-        
-        // Final check for Step 3 radio buttons
         const qCount = stigQuestions.length;
         for (let i = 1; i <= qCount; i++) {
             if (!document.querySelector(`input[name="q${i}"]:checked`)) {
-                alert("ANDA BELUM MENJAWAB SEMUA SOALAN");
+                alert("ANDA BELUM MENJAWAB SEMUA SOALAN\n\nYou haven't answered all the questions yet.");
                 return;
             }
         }
-
         const submitBtn = document.getElementById('submitBtn');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = "Menghantar... / Submitting...";
-
+        submitBtn.disabled = true; submitBtn.innerHTML = "Menghantar... / Submitting...";
         const scriptURL = "https://script.google.com/macros/s/AKfycbwLYEGnRCfPZaJrifs5PvIirdBdEb9zDn0MRHYdln_EKJkEw8ah7C9scYEm3obfQZg9/exec";
-
-        fetch(scriptURL, { 
-            method: 'POST', 
-            body: new FormData(this)
-        })
-        .then(response => {
-            // Success logic even if CORS errors occur (as common with G-Scripts)
+        fetch(scriptURL, { method: 'POST', body: new FormData(this) })
+        .then(() => {
             document.getElementById('step3').classList.remove('active');
             document.getElementById('step4').classList.add('active');
             document.getElementById('progressBar').style.width = '100%';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         })
-        .catch(error => {
-            // Fallback for network issues / CORS
+        .catch(() => {
             document.getElementById('step3').classList.remove('active');
             document.getElementById('step4').classList.add('active');
             document.getElementById('progressBar').style.width = '100%';
