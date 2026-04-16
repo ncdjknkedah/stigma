@@ -4,19 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kajian Stigma Kesihatan Mental / Mental Health Stigma Survey</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
-            --bg-color: #f0fdfa;
-            --card-bg: rgba(255, 255, 255, 0.95);
+            /* Tema Hijau Epal - Kesedaran Kesihatan Mental */
+            --primary: #78be20; 
+            --primary-hover: #65a318;
+            --bg-color: #f4fbef;
+            --card-bg: rgba(255, 255, 255, 0.98);
             --text-main: #1f2937;
             --text-muted: #4b5563;
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
             min-height: 100vh;
             margin: 0;
             display: flex;
@@ -30,15 +31,35 @@
             max-width: 800px;
             background: var(--card-bg);
             border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             padding: 40px;
             position: relative;
         }
+        /* Header Logo Section */
+        .header-logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .header-logo img {
+            width: 100px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+        .header-logo h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            letter-spacing: 0.5px;
+        }
+        
         .progress-container {
             width: 100%;
             background-color: #e5e7eb;
             border-radius: 999px;
-            height: 10px;
+            height: 8px;
             margin-bottom: 30px;
             overflow: hidden;
         }
@@ -46,7 +67,7 @@
             height: 100%;
             background-color: var(--primary);
             width: 0%;
-            transition: width 0.4s ease;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .step { display: none; animation: fadeIn 0.4s; }
         .step.active { display: block; }
@@ -58,55 +79,120 @@
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 14px 28px;
+            border-radius: 10px;
             font-size: 16px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             margin-top: 20px;
             font-weight: 600;
         }
-        .btn:hover { background-color: var(--primary-hover); }
+        .btn:hover { 
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(120, 190, 32, 0.2);
+        }
+        .btn:active { transform: translateY(0); }
         .btn-outline {
             background-color: transparent;
             color: var(--primary);
             border: 2px solid var(--primary);
-            padding: 10px 22px;
+            padding: 12px 26px;
+        }
+        .btn-outline:hover {
+            background-color: #f7fee7;
         }
         .flex-between { display: flex; justify-content: space-between; gap: 10px; }
-        .form-group { margin-bottom: 20px; }
-        .form-control {
-            width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 16px;
-            box-sizing: border-box;
+        .form-group { margin-bottom: 24px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 15px;
         }
-        .question-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
-        .bilingual-text { display: block; color: var(--text-muted); font-size: 14px; margin-top: 4px; }
-        .options-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .required-star {
+            color: #ef4444;
+            margin-left: 4px;
+            font-weight: bold;
+        }
+        .form-control {
+            width: 100%; 
+            padding: 14px; 
+            border: 1.5px solid #d1d5db; 
+            border-radius: 10px; 
+            font-size: 16px;
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #fafafa;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(120, 190, 32, 0.15);
+            background-color: #fff;
+        }
+        .question-card { 
+            background: white; 
+            padding: 24px; 
+            border-radius: 14px; 
+            margin-bottom: 20px; 
+            border: 1.5px solid #e5e7eb;
+            transition: transform 0.2s;
+        }
+        .question-card:hover { border-color: var(--primary); }
+        .bilingual-text { display: block; color: var(--text-muted); font-size: 14px; margin-top: 4px; font-weight: 400; }
+        .options-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
         .options-row label {
-            flex: 1; min-width: 140px; font-weight: 400; background: white; padding: 12px; border-radius: 8px;
-            border: 1px solid #d1d5db; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.2s;
+            flex: 1; 
+            min-width: 150px; 
+            font-weight: 500; 
+            background: #fff; 
+            padding: 14px; 
+            border-radius: 10px;
+            border: 1.5px solid #d1d5db; 
+            cursor: pointer; 
+            text-align: center; 
+            font-size: 14px; 
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .options-row input[type="radio"] { display: none; }
+        .options-row label:hover { border-color: var(--primary); background-color: #f7fee7; }
         .options-row label:has(input[type="radio"]:checked) {
-            border-color: var(--primary); background: #eef2ff; color: var(--primary); font-weight: bold;
+            border-color: var(--primary); 
+            background: #f1f8eb; 
+            color: var(--primary-hover); 
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(120, 190, 32, 0.1);
         }
+        hr { border: none; border-top: 1px solid #f0f0f0; margin: 30px 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- Header with Jata Negara -->
+    <div class="header-logo">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Coat_of_arms_of_Malaysia.svg/500px-Coat_of_arms_of_Malaysia.svg.png" alt="Jata Negara">
+        <h3>KEMENTERIAN KESIHATAN MALAYSIA</h3>
+    </div>
+
     <div class="progress-container">
         <div class="progress-bar" id="progressBar"></div>
     </div>
 
     <form id="surveyForm">
+        <!-- STEP 1: CONSENT -->
         <div class="step active" id="step1">
             <h2>Penerangan & Persetujuan <br><span class="bilingual-text" style="font-size:18px;">Information & Consent</span></h2>
             <p>Terima kasih kerana meluangkan masa. Tinjauan ini adalah kerjasama antara Unit Kawalan Penyakit Tidak Berjangkit, Jabatan Kesihatan Negeri Kedah dan Pusat Pengajian Teknologi, Multimedia, dan Komunikasi Universiti Utara Malaysia sebagai sebahagian daripada kerja kursus SCCAK2073 Perhubungan Awam. Ia bertujuan untuk mengukur tahap stigma terhadap kesihatan mental dalam kalangan masyarakat. Segala maklumat yang anda kongsikan adalah <strong>SULIT</strong> dan hanya digunakan untuk <strong>tujuan tinjauan ini sahaja</strong>.</p>
             <p class="bilingual-text">Thank you for your time. This survey is a collaboration between the Non-Communicable Disease (NCD) Control Unit of the Kedah State Health Department and the School of Multimedia Technology and Communication, Universiti Utara Malaysia, as part of the SCCAK2073 Public Relations coursework. It aims to measure the level of stigma toward mental health within the community. All information shared is <strong>CONFIDENTIAL</strong> and will only be used for <strong>this survey purpose</strong>.</p>
             
             <div class="form-group" style="margin-top: 30px;">
-                <label style="font-weight: 600;">Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree to continue with this survey?</label>
+                <label>Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree to continue with this survey?<span class="required-star">*</span></label>
                 <div class="options-row">
                     <label><input type="radio" name="consent" value="Yes" required> <span>Ya / Yes</span></label>
                     <label><input type="radio" name="consent" value="No"> <span>Tidak / No</span></label>
@@ -118,48 +204,51 @@
             </div>
         </div>
 
+        <!-- STEP 2: DEMOGRAPHICS -->
         <div class="step" id="step2">
             <h2>BAHAGIAN A: DEMOGRAFI <br><span class="bilingual-text" style="font-size:18px;">SECTION A: DEMOGRAPHY</span></h2>
             
-            <div class="form-group">
-                <label>Jantina / Gender</label>
-                <select name="jantina" class="form-control" required>
-                    <option value="">Pilih / Select</option>
-                    <option value="Lelaki">Lelaki / Male</option>
-                    <option value="Perempuan">Perempuan / Female</option>
-                </select>
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Jantina / Gender<span class="required-star">*</span></label>
+                    <select name="jantina" class="form-control" required>
+                        <option value="">Pilih / Select</option>
+                        <option value="Lelaki">Lelaki / Male</option>
+                        <option value="Perempuan">Perempuan / Female</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Umur / Age<span class="required-star">*</span></label>
+                    <input type="number" name="umur" class="form-control" required min="15" max="100" placeholder="Cth: 25">
+                </div>
+            </div>
+
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Bangsa / Race<span class="required-star">*</span></label>
+                    <select name="bangsa" class="form-control" required>
+                        <option value="">Pilih / Select</option>
+                        <option value="Melayu">Melayu</option>
+                        <option value="Cina">Cina</option>
+                        <option value="India">India</option>
+                        <option value="Lain-lain">Lain-lain / Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Agama / Religion<span class="required-star">*</span></label>
+                    <select name="agama" class="form-control" required>
+                        <option value="">Pilih / Select</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Kristian">Kristian / Christian</option>
+                        <option value="Hindu">Hindu</option>
+                        <option value="Budha">Budha / Buddhist</option>
+                        <option value="Lain-lain">Lain-lain / Others</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
-                <label>Umur / Age</label>
-                <input type="number" name="umur" class="form-control" required min="15" max="100">
-            </div>
-
-            <div class="form-group">
-                <label>Bangsa / Race</label>
-                <select name="bangsa" class="form-control" required>
-                    <option value="">Pilih / Select</option>
-                    <option value="Melayu">Melayu</option>
-                    <option value="Cina">Cina</option>
-                    <option value="India">India</option>
-                    <option value="Lain-lain">Lain-lain / Others</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Agama / Religion</label>
-                <select name="agama" class="form-control" required>
-                    <option value="">Pilih / Select</option>
-                    <option value="Islam">Islam</option>
-                    <option value="Kristian">Kristian / Christian</option>
-                    <option value="Hindu">Hindu</option>
-                    <option value="Budha">Budha / Buddhist</option>
-                    <option value="Lain-lain">Lain-lain / Others</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Tahap Pendidikan / Education Level</label>
+                <label>Tahap Pendidikan / Education Level<span class="required-star">*</span></label>
                 <select name="pendidikan" class="form-control" required>
                     <option value="">Pilih / Select</option>
                     <option value="Tiada Pendidikan Formal">Tiada Pendidikan Formal / No Formal Education</option>
@@ -176,7 +265,7 @@
             </div>
 
             <div class="form-group">
-                <label>Pekerjaan / Occupation</label>
+                <label>Pekerjaan / Occupation<span class="required-star">*</span></label>
                 <select name="pekerjaan" class="form-control" required>
                     <option value="">Pilih / Select</option>
                     <option value="Tidak Bekerja">Tidak Bekerja / Unemployed</option>
@@ -187,15 +276,52 @@
                 </select>
             </div>
 
+            <!-- New Geographic Fields -->
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Negeri / State<span class="required-star">*</span></label>
+                    <select name="negeri" id="negeriSelect" class="form-control" required onchange="updateDaerah()">
+                        <option value="">Pilih / Select</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Daerah / District<span class="required-star">*</span></label>
+                    <select name="daerah" id="daerahSelect" class="form-control" required disabled>
+                        <option value="">Pilih Negeri Dahulu / Select State First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nama Program (Jika Berkenaan) / Program Name (If Applicable)</label>
+                <input type="text" name="nama_program" class="form-control" placeholder="Tinggalkan kosong jika tiada">
+            </div>
+
+            <div class="form-group">
+                <label>Penganjur (Jika Berkenaan) / Organizer (If Applicable)</label>
+                <input type="text" name="penganjur" class="form-control" placeholder="Tinggalkan kosong jika tiada">
+            </div>
+
+            <div class="form-group">
+                <label>Soalan Pre/Post (Jika Berkenaan) / Pre/Post Question (If Applicable)</label>
+                <select name="pre_post" class="form-control">
+                    <option value="">Pilih Jika Berkenaan / Select If Applicable</option>
+                    <option value="Pre">Pre-Survey (Sebelum Program)</option>
+                    <option value="Post">Post-Survey (Selepas Program)</option>
+                </select>
+            </div>
+
             <div class="flex-between">
                 <button type="button" class="btn btn-outline" onclick="prevStep(2)">Kembali / Back</button>
                 <button type="button" class="btn" onclick="nextStep(2)">Seterusnya / Next</button>
             </div>
         </div>
 
+        <!-- STEP 3: STIG-9 QUESTIONS -->
         <div class="step" id="step3">
             <h2>BAHAGIAN B: PROFIL STIGMA KOMUNITI (STIG-9)</h2>
             <p style="font-weight: 600;">SAYA RASA KEBANYAKAN ORANG... <br><span class="bilingual-text">I FEEL THAT MOST PEOPLE...</span></p>
+            <p style="font-size: 14px; color: var(--text-muted);">Sila tandakan satu jawapan bagi setiap soalan. <span class="required-star">* Semua wajib diisi.</span></p>
             <hr>
             <div id="stig9Container"></div>
 
@@ -205,16 +331,68 @@
             </div>
         </div>
 
-        <div class="step" id="step4" style="text-align: center; padding: 40px 0;">
-            <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
-            <h2>Terima Kasih! / Thank You!</h2>
-            <p>Jawapan anda telah berjaya direkodkan.</p>
-            <p>Your response has been successfully recorded.</p>
+        <!-- STEP 4: THANK YOU -->
+        <div class="step" id="step4" style="text-align: center; padding: 60px 0;">
+            <img src="https://media.licdn.com/dms/image/D5612AQH6X1k0Y6Z5XQ/article-cover_image-shrink_600_2000/0/1691475850989?e=2147483647&v=beta&t=Zz7DnxXUpQpYv7T8v6s_KxYnU5uW9S9Z9v9W9_n_u50" alt="Hentikan Stigma Logo" style="width: 250px; height: auto; margin-bottom: 24px;">
+            <h2 style="color: var(--primary);">Terima Kasih! / Thank You!</h2>
+            <p style="font-size: 18px;">Jawapan anda telah berjaya direkodkan.</p>
+            <p class="bilingual-text" style="font-size: 16px;">Your response has been successfully recorded.</p>
+            <button type="button" class="btn" onclick="location.reload()" style="margin-top: 40px;">Isi Borang Baru / Fill Another Response</button>
         </div>
     </form>
 </div>
 
 <script>
+    // DATA NEGERI DAN DAERAH (DISUSUN MENGIKUT ABJAD)
+    const locationData = {
+        "Johor": ["Batu Pahat", "Johor Bahru", "Kluang", "Kota Tinggi", "Kulai", "Mersing", "Muar", "Pontian", "Segamat", "Tangkak"],
+        "Kedah": ["Baling", "Bandar Baharu", "Kota Setar", "Kuala Muda", "Kubang Pasu", "Kulim", "Langkawi", "Padang Terap", "Pendang", "Pokok Sena", "Sik", "Yan"],
+        "Kelantan": ["Bachok", "Gua Musang", "Jeli", "Kota Bharu", "Kuala Krai", "Machang", "Pasir Mas", "Pasir Puteh", "Tanah Merah", "Tumpat"],
+        "Melaka": ["Alor Gajah", "Jasin", "Melaka Tengah"],
+        "Negeri Sembilan": ["Jelebu", "Jempol", "Kuala Pilah", "Port Dickson", "Rembau", "Seremban", "Tampin"],
+        "Pahang": ["Bentong", "Bera", "Cameron Highlands", "Jerantut", "Kuantan", "Lipis", "Maran", "Pekan", "Raub", "Rompin", "Temerloh"],
+        "Perak": ["Bagan Datuk", "Batang Padang", "Hilir Perak", "Hulu Perak", "Kampar", "Kerian", "Kinta", "Kuala Kangsar", "Larut, Matang dan Selama", "Manjung", "Muallim", "Perak Tengah"],
+        "Perlis": ["Perlis"],
+        "Pulau Pinang": ["Barat Daya", "Seberang Perai Selatan", "Seberang Perai Tengah", "Seberang Perai Utara", "Timur Laut"],
+        "Sabah": ["Beaufort", "Beluran", "Keningau", "Kinabatangan", "Kota Belud", "Kota Kinabalu", "Kota Marudu", "Kuala Penyu", "Kudat", "Kunak", "Lahad Datu", "Nabawan", "Papar", "Penampang", "Pitas", "Putatan", "Ranau", "Sandakan", "Semporna", "Sipitang", "Tambunan", "Tawau", "Telupid", "Tenom", "Tongod", "Tuaran"],
+        "Sarawak": ["Asajaya", "Bau", "Belaga", "Beluru", "Betong", "Bintulu", "Bukit Mabong", "Dalat", "Daro", "Julau", "Kabong", "Kanowit", "Kapit", "Kuching", "Lawas", "Limbang", "Lubok Antu", "Lundu", "Marudi", "Matu", "Meradong", "Miri", "Mukah", "Pakan", "Pusa", "Samarahan", "Saratok", "Sarikei", "Sebauh", "Selangau", "Serian", "Sibu", "Simunjan", "Song", "Sri Aman", "Subis", "Tanjung Manis", "Tatau", "Tebedu"],
+        "Selangor": ["Gombak", "Hulu Langat", "Hulu Selangor", "Klang", "Kuala Langat", "Kuala Selangor", "Petaling", "Sabak Bernam", "Sepang"],
+        "Terengganu": ["Besut", "Dungun", "Hulu Terengganu", "Kemaman", "Kuala Nerus", "Kuala Terengganu", "Marang", "Setiu"],
+        "W.P. Kuala Lumpur": ["Kuala Lumpur"],
+        "W.P. Labuan": ["Labuan"],
+        "W.P. Putrajaya": ["Putrajaya"]
+    };
+
+    // Populate State Select
+    const negeriSelect = document.getElementById('negeriSelect');
+    const daerahSelect = document.getElementById('daerahSelect');
+    
+    // Sort and Populate
+    Object.keys(locationData).sort().forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        negeriSelect.appendChild(option);
+    });
+
+    function updateDaerah() {
+        const selectedState = negeriSelect.value;
+        daerahSelect.innerHTML = '<option value="">Pilih / Select</option>';
+        
+        if (selectedState) {
+            daerahSelect.disabled = false;
+            locationData[selectedState].sort().forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                daerahSelect.appendChild(option);
+            });
+        } else {
+            daerahSelect.disabled = true;
+            daerahSelect.innerHTML = '<option value="">Pilih Negeri Dahulu / Select State First</option>';
+        }
+    }
+
     const stigQuestions = [
         ["... berasa tidak senang apabila seseorang yang pernah dirawat kerana masalah kesihatan mental berpindah ke kawasan kejiranan.", "... feel uncomfortable when someone who has been treated for a mental health problem moves into the neighborhood."],
         ["... tidak akan menjalin hubungan dengan seseorang yang pernah dirawat kerana masalah kesihatan mental.", "... would not enter into a close relationship with someone who has been treated for a mental health problem."],
@@ -227,12 +405,12 @@
         ["... memandang kurang serius pendapat seseorang yang pernah dirawat kerana masalah kesihatan mental.", "... take the opinions of someone who has been treated for a mental health problem less seriously."]
     ];
 
-    const container = document.getElementById('stig9Container');
+    const stigContainer = document.getElementById('stig9Container');
     stigQuestions.forEach((q, i) => {
-        container.innerHTML += `
+        stigContainer.innerHTML += `
             <div class="question-card">
-                <p><b>${i+1}. ${q[0]}</b></p>
-                <span class="bilingual-text" style="font-style: italic; margin-bottom: 10px;">${q[1]}</span>
+                <p><b>${i+1}. ${q[0]}</b> <span class="required-star">*</span></p>
+                <span class="bilingual-text" style="font-style: italic; margin-bottom: 12px;">${q[1]}</span>
                 <div class="options-row">
                     <label><input type="radio" name="q${i+1}" value="1" required><span>Tidak Setuju<br>(Disagree)</span></label>
                     <label><input type="radio" name="q${i+1}" value="2"><span>Agak Tidak Setuju<br>(Slightly Disagree)</span></label>
@@ -244,32 +422,36 @@
 
     let currentStep = 1;
     function updateProgress() {
+        // We have 3 active steps for progress calc
         document.getElementById('progressBar').style.width = ((currentStep-1)/3)*100 + '%';
     }
 
     function nextStep(step) {
         const currentStepEl = document.getElementById('step'+step);
-        const inputs = currentStepEl.querySelectorAll('input[required], select[required]');
+        const requiredElements = currentStepEl.querySelectorAll('[required]');
         
-        let valid = true;
-        inputs.forEach(input => {
-            if (input.type === 'radio') {
-                const name = input.name;
-                if (!document.querySelector(`input[name="${name}"]:checked`)) valid = false;
-            } else if (!input.value) {
-                valid = false;
+        let isValid = true;
+        requiredElements.forEach(el => {
+            if (el.type === 'radio') {
+                const name = el.name;
+                if (!document.querySelector(`input[name="${name}"]:checked`)) isValid = false;
+            } else if (!el.value) {
+                isValid = false;
+                el.style.borderColor = '#ef4444'; 
+            } else {
+                el.style.borderColor = '#d1d5db';
             }
         });
 
-        if (!valid) {
-            alert("Sila lengkapkan semua maklumat sebelum ke bahagian seterusnya.");
+        if (!isValid) {
+            alert("ANDA BELUM MENJAWAB SEMUA SOALAN <br>You haven't answered all the questions yet. ");
             return;
         }
 
         if (step === 1) {
             const consent = document.querySelector('input[name="consent"]:checked').value;
             if (consent === "No") {
-                alert("Anda telah memilih untuk tidak menyertai tinjauan ini. Terima kasih.");
+                alert("Anda tidak bersetuju. Terima kasih.");
                 return;
             }
         }
@@ -278,7 +460,7 @@
         currentStep++;
         document.getElementById('step'+currentStep).classList.add('active');
         updateProgress();
-        window.scrollTo(0,0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function prevStep(step) {
@@ -286,34 +468,44 @@
         currentStep--;
         document.getElementById('step'+currentStep).classList.add('active');
         updateProgress();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.getElementById('surveyForm').onsubmit = function(e) {
         e.preventDefault();
+        
+        // Final check for Step 3 radio buttons
+        const qCount = stigQuestions.length;
+        for (let i = 1; i <= qCount; i++) {
+            if (!document.querySelector(`input[name="q${i}"]:checked`)) {
+                alert("ANDA BELUM MENJAWAB SEMUA SOALAN");
+                return;
+            }
+        }
+
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-        submitBtn.innerText = "Menghantar...";
+        submitBtn.innerHTML = "Menghantar... / Submitting...";
 
-        // URL Web App
         const scriptURL = "https://script.google.com/macros/s/AKfycbwLYEGnRCfPZaJrifs5PvIirdBdEb9zDn0MRHYdln_EKJkEw8ah7C9scYEm3obfQZg9/exec";
 
-        // MENGHANTAR DATA MENGGUNAKAN FORMDATA (MEMBUATKAN IA BOLEH DIBACA OLEH APPS SCRIPT)
         fetch(scriptURL, { 
             method: 'POST', 
             body: new FormData(this)
         })
-        .then(response => response.json()) // ataupun boleh abaikan baca response dari server jika guna no-cors
-        .then(() => {
+        .then(response => {
+            // Success logic even if CORS errors occur (as common with G-Scripts)
             document.getElementById('step3').classList.remove('active');
             document.getElementById('step4').classList.add('active');
             document.getElementById('progressBar').style.width = '100%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         })
         .catch(error => {
-            // Jika ada masalah CORS pun, kadang-kala data tetap berjaya masuk ke Google Sheet.
-            // Kita benarkan berjaya jika ianya 'Failed to fetch' akibat no-cors redirect
+            // Fallback for network issues / CORS
             document.getElementById('step3').classList.remove('active');
             document.getElementById('step4').classList.add('active');
             document.getElementById('progressBar').style.width = '100%';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     };
 </script>
