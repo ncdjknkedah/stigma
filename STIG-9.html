@@ -464,7 +464,7 @@
 
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true; submitBtn.innerHTML = "Menghantar... / Submitting...";
-        const scriptURL = "https://script.google.com/macros/s/AKfycbwLYEGnRCfPZaJrifs5PvIirdBdEb9zDn0MRHYdln_EKJkEw8ah7C9scYEm3obfQZg9/exec";
+        const scriptURL = "https://script.google.com/macros/s/AKfycbxV26GcYuFxl8OY1xxMg9a0GKpIfbUms8bu66ByMCiY_qgabK9ymAhE2tYes2N29suA/exec";
         fetch(scriptURL, { method: 'POST', body: new FormData(this) })
         .then(() => {
             document.getElementById('step3').classList.remove('active');
