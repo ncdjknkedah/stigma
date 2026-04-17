@@ -167,15 +167,6 @@
             font-weight: 700;
         }
         hr { border: none; border-top: 1px solid #f0f0f0; margin: 30px 0; }
-        
-        /* Gaya Khas untuk Logo Google Drive */
-        .final-logo {
-            width: 320px; 
-            height: auto; 
-            margin-bottom: 24px; 
-            border-radius: 0;
-            mix-blend-mode: multiply; /* Menghilangkan background putih digital */
-        }
     </style>
 </head>
 <body>
@@ -191,12 +182,13 @@
     </div>
 
     <form id="surveyForm">
-        <!-- STEP 1: CONSENT (Kekal) -->
         <div class="step active" id="step1">
             <h2>Penerangan & Persetujuan <br><span class="bilingual-text" style="font-size:18px;">Information & Consent</span></h2>
-            <p>Terima kasih kerana meluangkan masa. Tinjauan ini bertujuan untuk mengukur tahap stigma iaitu persepsi masyarakat terhadap kesihatan mental dalam kalangan masyarakat. Maklumbalas anda akan membantu pihak Kementerian Kesihatan Malaysia dalam merangka program ke arah mengurangkan stigma terhadap kesihatan mental dalam masyarakat.</p>
+            <p>Terima kasih kerana meluangkan masa. Tinjauan ini adalah kerjasama antara Unit Kawalan Penyakit Tidak Berjangkit, Jabatan Kesihatan Negeri Kedah dan Pusat Pengajian Teknologi, Multimedia, dan Komunikasi Universiti Utara Malaysia sebagai sebahagian daripada kerja kursus SCCAK2073 Perhubungan Awam. Ia bertujuan untuk mengukur tahap stigma terhadap kesihatan mental dalam kalangan masyarakat. Segala maklumat yang anda kongsikan adalah <strong>SULIT</strong> dan hanya digunakan untuk <strong>tujuan tinjauan ini sahaja</strong>.</p>
+            <p class="bilingual-text">Thank you for your time. This survey is a collaboration between the Non-Communicable Disease (NCD) Control Unit of the Kedah State Health Department and the School of Multimedia Technology and Communication, Universiti Utara Malaysia, as part of the SCCAK2073 Public Relations coursework. It aims to measure the level of stigma toward mental health within the community. All information shared is <strong>CONFIDENTIAL</strong> and will only be used for <strong>this survey purpose</strong>.</p>
+            
             <div class="form-group" style="margin-top: 30px;">
-                <label>Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree?<span class="required-star">*</span></label>
+                <label>Adakah anda bersetuju untuk meneruskan soal selidik ini? / Do you agree to continue with this survey?<span class="required-star">*</span></label>
                 <div class="options-row" style="grid-template-columns: 1fr 1fr;">
                     <label style="height: 60px;"><input type="radio" name="consent" value="Yes" required> <span>Ya / Yes</span></label>
                     <label style="height: 60px;"><input type="radio" name="consent" value="No"> <span>Tidak / No</span></label>
@@ -208,11 +200,10 @@
             </div>
         </div>
 
-        <!-- STEP 2: DEMOGRAFI (Kekal) -->
         <div class="step" id="step2">
-             <h2>BAHAGIAN A: DEMOGRAFI</h2>
-             <!-- ... Kod Demografi anda (Sama seperti asal) ... -->
-             <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <h2>BAHAGIAN A: DEMOGRAFI <br><span class="bilingual-text" style="font-size:18px;">SECTION A: DEMOGRAPHY</span></h2>
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label>Jantina / Gender<span class="required-star">*</span></label>
                     <select name="jantina" class="form-control" required>
@@ -223,43 +214,121 @@
                 </div>
                 <div class="form-group">
                     <label>Umur / Age<span class="required-star">*</span></label>
-                    <input type="number" name="umur" class="form-control" required min="15" max="100">
+                    <input type="number" name="umur" class="form-control" required min="15" max="100" placeholder="Cth: 25">
                 </div>
             </div>
+
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Bangsa / Race<span class="required-star">*</span></label>
+                    <select name="bangsa" class="form-control" required>
+                        <option value="">Pilih / Select</option>
+                        <option value="Melayu">Melayu</option>
+                        <option value="Cina">Cina</option>
+                        <option value="India">India</option>
+                        <option value="Lain-lain">Lain-lain / Others</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Agama / Religion<span class="required-star">*</span></label>
+                    <select name="agama" class="form-control" required>
+                        <option value="">Pilih / Select</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Kristian">Kristian / Christian</option>
+                        <option value="Hindu">Hindu</option>
+                        <option value="Budha">Budha / Buddhist</option>
+                        <option value="Lain-lain">Lain-lain / Others</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label>Negeri / State<span class="required-star">*</span></label>
-                <select name="negeri" id="negeriSelect" class="form-control" required onchange="updateDaerah()">
+                <label>Tahap Pendidikan / Education Level<span class="required-star">*</span></label>
+                <select name="pendidikan" class="form-control" required>
                     <option value="">Pilih / Select</option>
+                    <option value="Tiada Pendidikan Formal">Tiada Pendidikan Formal / No Formal Education</option>
+                    <option value="UPSR">UPSR</option>
+                    <option value="SRP/PMR">SRP/PMR</option>
+                    <option value="SPM">SPM</option>
+                    <option value="STPM">STPM</option>
+                    <option value="Sijil">Sijil / Certificate</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Ijazah">Ijazah / Degree</option>
+                    <option value="Ijazah Sarjana">Ijazah Sarjana / Master's Degree</option>
+                    <option value="PHD">PHD</option>
                 </select>
             </div>
+
             <div class="form-group">
-                <label>Daerah / District<span class="required-star">*</span></label>
-                <select name="daerah" id="daerahSelect" class="form-control" required disabled>
-                    <option value="">Pilih Negeri Dahulu</option>
+                <label>Pekerjaan / Occupation<span class="required-star">*</span></label>
+                <select name="pekerjaan" class="form-control" required>
+                    <option value="">Pilih / Select</option>
+                    <option value="Tidak Bekerja">Tidak Bekerja / Unemployed</option>
+                    <option value="Pelajar">Pelajar / Student</option>
+                    <option value="Sektor Awam">Sektor Awam / Public Sector</option>
+                    <option value="Sektor Swasta">Sektor Swasta / Private Sector</option>
+                    <option value="Bekerja Sendiri">Bekerja Sendiri / Self-Employed</option>
                 </select>
             </div>
+
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label>Negeri / State<span class="required-star">*</span></label>
+                    <select name="negeri" id="negeriSelect" class="form-control" required onchange="updateDaerah()">
+                        <option value="">Pilih / Select</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Daerah / District<span class="required-star">*</span></label>
+                    <select name="daerah" id="daerahSelect" class="form-control" required disabled>
+                        <option value="">Pilih Negeri Dahulu</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nama Program (Jika Berkenaan) / Program Name (If Applicable)</label>
+                <input type="text" name="nama_program" class="form-control" placeholder="Tinggalkan kosong jika tiada">
+            </div>
+
+            <div class="form-group">
+                <label>Penganjur (Jika Berkenaan) / Organizer (If Applicable)</label>
+                <input type="text" name="penganjur" class="form-control" placeholder="Tinggalkan kosong jika tiada">
+            </div>
+
+            <div class="form-group">
+                <label>Soalan Pre/Post (Jika Berkenaan) / Pre/Post Question (If Applicable)</label>
+                <select name="pre_post" class="form-control">
+                    <option value="">Pilih Jika Berkenaan / Select If Applicable</option>
+                    <option value="Pre">Pre-Survey (Sebelum Program)</option>
+                    <option value="Post">Post-Survey (Selepas Program)</option>
+                </select>
+            </div>
+
             <div class="flex-between">
                 <button type="button" class="btn btn-outline" onclick="prevStep(2)">Kembali / Back</button>
                 <button type="button" class="btn" onclick="nextStep(2)">Seterusnya / Next</button>
             </div>
         </div>
 
-        <!-- STEP 3: STIG-9 -->
         <div class="step" id="step3">
             <h2>BAHAGIAN B: PROFIL STIGMA KOMUNITI (STIG-9)</h2>
+            <p style="font-weight: 600;">SAYA RASA KEBANYAKAN ORANG... <br><span class="bilingual-text">I FEEL THAT MOST PEOPLE...</span></p>
+            <p style="font-size: 14px; color: var(--text-muted);">Sila tandakan satu jawapan bagi setiap soalan. <span class="required-star">* Semua wajib diisi.</span></p>
+            <hr>
             <div id="stig9Container"></div>
-            <div class="flex-between" style="margin-top: 30px;">
+
+            <div class="flex-between">
                 <button type="button" class="btn btn-outline" onclick="prevStep(3)">Kembali / Back</button>
                 <button type="submit" class="btn" id="submitBtn">Hantar Soal Selidik / Submit</button>
             </div>
         </div>
 
-        <!-- STEP 4: THANK YOU -->
         <div class="step" id="step4" style="text-align: center; padding: 60px 0;">
-            <!-- PEMBETULAN: MENGGUNAKAN LOGO GOOGLE DRIVE DENGAN DIRECT LINK -->
+            <!-- PERUBAHAN HANYA PADA BARIS INI (LOGO GOOGLE DRIVE) -->
             <img src="https://drive.google.com/thumbnail?id=1aFIgBjmYdyGfK3ubWwJtF2ejP_gzPCyr&sz=w1000" 
                  alt="Hentikan Stigma Logo" 
-                 class="final-logo"
+                 style="width: 320px; height: auto; margin-bottom: 24px; mix-blend-mode: multiply;"
                  onerror="this.src='https://via.placeholder.com/320x160?text=HENTIKAN+STIGMA';">
             <h2 style="color: var(--primary);">Terima Kasih! / Thank You!</h2>
             <p style="font-size: 18px;">Jawapan anda telah berjaya direkodkan.</p>
@@ -270,8 +339,24 @@
 </div>
 
 <script>
-    // Data Lokasi
-    const locationData = {"Johor":["Batu Pahat","Johor Bahru","Kluang","Kota Tinggi","Kulai","Mersing","Muar","Pontian","Segamat","Tangkak"],"Kedah":["Baling","Bandar Baharu","Kota Setar","Kuala Muda","Kubang Pasu","Kulim","Langkawi","Padang Terap","Pendang","Pokok Sena","Sik","Yan"],"Kelantan":["Bachok","Gua Musang","Jeli","Kota Bharu","Kuala Krai","Machang","Pasir Mas","Pasir Puteh","Tanah Merah","Tumpat"],"Melaka":["Alor Gajah","Jasin","Melaka Tengah"],"Negeri Sembilan":["Jelebu","Jempol","Kuala Pilah","Port Dickson","Rembau","Seremban","Tampin"],"Pahang":["Bentong","Bera","Cameron Highlands","Jerantut","Kuantan","Lipis","Maran","Pekan","Raub","Rompin","Temerloh"],"Perak":["Bagan Datuk","Batang Padang","Hilir Perak","Hulu Perak","Kampar","Kerian","Kinta","Kuala Kangsar","Larut, Matang dan Selama","Manjung","Muallim","Perak Tengah"],"Perlis":["Perlis"],"Pulau Pinang":["Barat Daya","Seberang Perai Selatan","Seberang Perai Tengah","Seberang Perai Utara","Timur Laut"],"Sabah":["Beaufort","Beluran","Keningau","Kinabatangan","Kota Belud","Kota Kinabalu","Kota Marudu","Kuala Penyu","Kudat","Kunak","Lahad Datu","Nabawan","Papar","Penampang","Pitas","Putatan","Ranau","Sandakan","Semporna","Sipitang","Tambunan","Tawau","Telupid","Tenom","Tongod","Tuaran"],"Sarawak":["Asajaya","Bau","Belaga","Beluru","Betong","Bintulu","Bukit Mabong","Dalat","Daro","Julau","Kabong","Kanowit","Kapit","Kuching","Lawas","Limbang","Lubok Antu","Lundu","Marudi","Matu","Meradong","Miri","Mukah","Pakan","Pusa","Samarahan","Saratok","Sarikei","Sebauh","Selangau","Serian","Sibu","Simunjan","Song","Sri Aman","Subis","Tanjung Manis","Tatau","Tebedu"],"Selangor":["Gombak","Hulu Langat","Hulu Selangor","Klang","Kuala Langat","Kuala Selangor","Petaling","Sabak Bernam","Sepang"],"Terengganu":["Besut","Dungun","Hulu Terengganu","Kemaman","Kuala Nerus","Kuala Terengganu","Marang","Setiu"],"W.P. Kuala Lumpur":["Kuala Lumpur"],"W.P. Labuan":["Labuan"],"W.P. Putrajaya":["Putrajaya"]};
+    const locationData = {
+        "Johor": ["Batu Pahat", "Johor Bahru", "Kluang", "Kota Tinggi", "Kulai", "Mersing", "Muar", "Pontian", "Segamat", "Tangkak"],
+        "Kedah": ["Baling", "Bandar Baharu", "Kota Setar", "Kuala Muda", "Kubang Pasu", "Kulim", "Langkawi", "Padang Terap", "Pendang", "Pokok Sena", "Sik", "Yan"],
+        "Kelantan": ["Bachok", "Gua Musang", "Jeli", "Kota Bharu", "Kuala Krai", "Machang", "Pasir Mas", "Pasir Puteh", "Tanah Merah", "Tumpat"],
+        "Melaka": ["Alor Gajah", "Jasin", "Melaka Tengah"],
+        "Negeri Sembilan": ["Jelebu", "Jempol", "Kuala Pilah", "Port Dickson", "Rembau", "Seremban", "Tampin"],
+        "Pahang": ["Bentong", "Bera", "Cameron Highlands", "Jerantut", "Kuantan", "Lipis", "Maran", "Pekan", "Raub", "Rompin", "Temerloh"],
+        "Perak": ["Bagan Datuk", "Batang Padang", "Hilir Perak", "Hulu Perak", "Kampar", "Kerian", "Kinta", "Kuala Kangsar", "Larut, Matang dan Selama", "Manjung", "Muallim", "Perak Tengah"],
+        "Perlis": ["Perlis"],
+        "Pulau Pinang": ["Barat Daya", "Seberang Perai Selatan", "Seberang Perai Tengah", "Seberang Perai Utara", "Timur Laut"],
+        "Sabah": ["Beaufort", "Beluran", "Keningau", "Kinabatangan", "Kota Belud", "Kota Kinabalu", "Kota Marudu", "Kuala Penyu", "Kudat", "Kunak", "Lahad Datu", "Nabawan", "Papar", "Penampang", "Pitas", "Putatan", "Ranau", "Sandakan", "Semporna", "Sipitang", "Tambunan", "Tawau", "Telupid", "Tenom", "Tongod", "Tuaran"],
+        "Sarawak": ["Asajaya", "Bau", "Belaga", "Beluru", "Betong", "Bintulu", "Bukit Mabong", "Dalat", "Daro", "Julau", "Kabong", "Kanowit", "Kapit", "Kuching", "Lawas", "Limbang", "Lubok Antu", "Lundu", "Marudi", "Matu", "Meradong", "Miri", "Mukah", "Pakan", "Pusa", "Samarahan", "Saratok", "Sarikei", "Sebauh", "Selangau", "Serian", "Sibu", "Simunjan", "Song", "Sri Aman", "Subis", "Tanjung Manis", "Tatau", "Tebedu"],
+        "Selangor": ["Gombak", "Hulu Langat", "Hulu Selangor", "Klang", "Kuala Langat", "Kuala Selangor", "Petaling", "Sabak Bernam", "Sepang"],
+        "Terengganu": ["Besut", "Dungun", "Hulu Terengganu", "Kemaman", "Kuala Nerus", "Kuala Terengganu", "Marang", "Setiu"],
+        "W.P. Kuala Lumpur": ["Kuala Lumpur"],
+        "W.P. Labuan": ["Labuan"],
+        "W.P. Putrajaya": ["Putrajaya"]
+    };
 
     const negeriSelect = document.getElementById('negeriSelect');
     const daerahSelect = document.getElementById('daerahSelect');
@@ -291,6 +376,9 @@
                 option.value = district; option.textContent = district;
                 daerahSelect.appendChild(option);
             });
+        } else {
+            daerahSelect.disabled = true;
+            daerahSelect.innerHTML = '<option value="">Pilih Negeri Dahulu</option>';
         }
     }
 
@@ -322,6 +410,10 @@
     });
 
     let currentStep = 1;
+    function updateProgress() {
+        document.getElementById('progressBar').style.width = ((currentStep-1)/3)*100 + '%';
+    }
+
     function nextStep(step) {
         const currentStepEl = document.getElementById('step'+step);
         const requiredElements = currentStepEl.querySelectorAll('[required]');
@@ -338,17 +430,21 @@
             alert("ANDA BELUM MENJAWAB SEMUA SOALAN\n\nYou haven't answered all the questions yet.");
             return;
         }
+
+        if (step === 1) {
+            const consent = document.querySelector('input[name="consent"]:checked').value;
+            if (consent === "No") { alert("Anda tidak bersetuju. Terima kasih."); return; }
+        }
+
         currentStepEl.classList.remove('active');
         currentStep++; document.getElementById('step'+currentStep).classList.add('active');
-        document.getElementById('progressBar').style.width = ((currentStep-1)/3)*100 + '%';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        updateProgress(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function prevStep(step) {
         document.getElementById('step'+step).classList.remove('active');
         currentStep--; document.getElementById('step'+currentStep).classList.add('active');
-        document.getElementById('progressBar').style.width = ((currentStep-1)/3)*100 + '%';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        updateProgress(); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     document.getElementById('surveyForm').onsubmit = function(e) {
@@ -356,7 +452,10 @@
         const qCount = stigQuestions.length;
         let allAnswered = true;
         for (let i = 1; i <= qCount; i++) {
-            if(!document.querySelector(`input[name="q${i}"]:checked`)) { allAnswered = false; break; }
+            const radioSet = document.getElementsByName(`q${i}`);
+            let answered = false;
+            for(let radio of radioSet) { if(radio.checked) { answered = true; break; } }
+            if (!answered) { allAnswered = false; break; }
         }
 
         if (!allAnswered) {
@@ -366,7 +465,6 @@
 
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true; submitBtn.innerHTML = "Menghantar... / Submitting...";
-        
         const scriptURL = "https://script.google.com/macros/s/AKfycbwLYEGnRCfPZaJrifs5PvIirdBdEb9zDn0MRHYdln_EKJkEw8ah7C9scYEm3obfQZg9/exec";
         fetch(scriptURL, { method: 'POST', body: new FormData(this) })
         .then(() => {
