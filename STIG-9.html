@@ -182,6 +182,7 @@
     </div>
 
     <form id="surveyForm">
+        <!-- STEP 1: CONSET -->
         <div class="step active" id="step1">
             <h2>Penerangan & Persetujuan <br><span class="bilingual-text" style="font-size:18px;">Information & Consent</span></h2>
             <p>Terima kasih kerana meluangkan masa. Tinjauan ini adalah kerjasama antara Unit Kawalan Penyakit Tidak Berjangkit, Jabatan Kesihatan Negeri Kedah dan Pusat Pengajian Teknologi, Multimedia, dan Komunikasi Universiti Utara Malaysia sebagai sebahagian daripada kerja kursus SCCAK2073 Perhubungan Awam. Ia bertujuan untuk mengukur tahap stigma terhadap kesihatan mental dalam kalangan masyarakat. Segala maklumat yang anda kongsikan adalah <strong>SULIT</strong> dan hanya digunakan untuk <strong>tujuan tinjauan ini sahaja</strong>.</p>
@@ -200,6 +201,7 @@
             </div>
         </div>
 
+        <!-- STEP 2: DEMOGRAFI -->
         <div class="step" id="step2">
             <h2>BAHAGIAN A: DEMOGRAFI <br><span class="bilingual-text" style="font-size:18px;">SECTION A: DEMOGRAPHY</span></h2>
             
@@ -311,6 +313,7 @@
             </div>
         </div>
 
+        <!-- STEP 3: STIG-9 -->
         <div class="step" id="step3">
             <h2>BAHAGIAN B: PROFIL STIGMA KOMUNITI (STIG-9)</h2>
             <p style="font-weight: 600;">SAYA RASA KEBANYAKAN ORANG... <br><span class="bilingual-text">I FEEL THAT MOST PEOPLE...</span></p>
@@ -324,8 +327,12 @@
             </div>
         </div>
 
+        <!-- STEP 4: THANK YOU -->
         <div class="step" id="step4" style="text-align: center; padding: 60px 0;">
-            <img src="https://media.licdn.com/dms/image/D5612AQH6X1k0Y6Z5XQ/article-cover_image-shrink_600_2000/0/1691475850989?e=2147483647&v=beta&t=Zz7DnxXUpQpYv7T8v6s_KxYnU5uW9S9Z9v9W9_n_u50" alt="Hentikan Stigma Logo" style="width: 250px; height: auto; margin-bottom: 24px;">
+            <img src="https://mindateduh.com/wp-content/uploads/2023/10/WhatsApp-Image-2023-10-10-at-10.36.46.jpeg" 
+                 alt="Hentikan Stigma Logo" 
+                 style="width: 320px; height: auto; margin-bottom: 24px; border-radius: 12px;"
+                 onerror="this.src='https://via.placeholder.com/320x160?text=HENTIKAN+STIGMA';">
             <h2 style="color: var(--primary);">Terima Kasih! / Thank You!</h2>
             <p style="font-size: 18px;">Jawapan anda telah berjaya direkodkan.</p>
             <p class="bilingual-text" style="font-size: 16px;">Your response has been successfully recorded.</p>
@@ -392,12 +399,13 @@
 
     const stigContainer = document.getElementById('stig9Container');
     stigQuestions.forEach((q, i) => {
+        // PEMBETULAN: Cabut atribut 'required' untuk paksa logik amaran manual kita berfungsi
         stigContainer.innerHTML += `
             <div class="question-card">
                 <p><b>${i+1}. ${q[0]}</b> <span class="required-star">*</span></p>
                 <span class="bilingual-text" style="font-style: italic; margin-bottom: 12px;">${q[1]}</span>
                 <div class="options-row">
-                    <label><input type="radio" name="q${i+1}" value="1" required><span>Tidak Setuju<br>(Disagree)</span></label>
+                    <label><input type="radio" name="q${i+1}" value="1"><span>Tidak Setuju<br>(Disagree)</span></label>
                     <label><input type="radio" name="q${i+1}" value="2"><span>Agak Tidak Setuju<br>(Slightly Disagree)</span></label>
                     <label><input type="radio" name="q${i+1}" value="3"><span>Agak Setuju<br>(Slightly Agree)</span></label>
                     <label><input type="radio" name="q${i+1}" value="4"><span>Setuju<br>(Agree)</span></label>
@@ -445,15 +453,34 @@
 
     document.getElementById('surveyForm').onsubmit = function(e) {
         e.preventDefault();
+        
+        // PEMBETULAN: Logik semakan manual yang lebih ketat
         const qCount = stigQuestions.length;
+        let allAnswered = true;
+        
         for (let i = 1; i <= qCount; i++) {
-            if (!document.querySelector(`input[name="q${i}"]:checked`)) {
-                alert("ANDA BELUM MENJAWAB SEMUA SOALAN\n\nYou haven't answered all the questions yet.");
-                return;
+            const radioSet = document.getElementsByName(`q${i}`);
+            let answered = false;
+            for(let radio of radioSet) {
+                if(radio.checked) {
+                    answered = true;
+                    break;
+                }
+            }
+            if (!answered) {
+                allAnswered = false;
+                break;
             }
         }
+
+        if (!allAnswered) {
+            alert("ANDA BELUM MENJAWAB SEMUA SOALAN\n\nYou haven't answered all the questions yet.");
+            return false;
+        }
+
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true; submitBtn.innerHTML = "Menghantar... / Submitting...";
+        
         const scriptURL = "https://script.google.com/macros/s/AKfycbwLYEGnRCfPZaJrifs5PvIirdBdEb9zDn0MRHYdln_EKJkEw8ah7C9scYEm3obfQZg9/exec";
         fetch(scriptURL, { method: 'POST', body: new FormData(this) })
         .then(() => {
@@ -463,6 +490,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         })
         .catch(() => {
+            // Fallback jika CORS error
             document.getElementById('step3').classList.remove('active');
             document.getElementById('step4').classList.add('active');
             document.getElementById('progressBar').style.width = '100%';
