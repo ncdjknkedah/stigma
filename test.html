@@ -200,7 +200,7 @@
     </div>
 
     <script>
-        // Sila masukkan ID Google Sheets anda di bawah!
+        // ID Google Sheets anda
         const SHEET_ID = '1Kfs_pLEnTsoAUGrEbLnv2fgzf28e_k1isEcgyAuZWbA'; 
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
@@ -234,75 +234,81 @@
                 document.getElementById('loading-state').classList.add('hidden');
             } catch (error) {
                 console.error("Gagal memuatkan fail data:", error);
-                alert("Ralat memuatkan data. Sila pastikan Google Sheet anda ditetapkan pada mod 'Sesiapa sahaja dengan pautan boleh lihat' (Anyone with link can view).");
+                alert("Ralat memuatkan data. Sila pastikan Google Sheet anda ditetapkan pada mod 'Anyone with link can view'.");
             }
         }
 
-        // CSV Parser Ringkas (Menguruskan String Tanda Petak/Comma)
+        // CSV Parser Dinamik Mengikut Struktur Kolum A - V Real-time
         function parseCSV(text) {
-            const lines = text.split('\n');
+            const lines = text.split(/\r?\n/);
             if (lines.length === 0) return;
-            
-            // Anggap baris pertama ialah Header
-            const headers = lines[0].split(',').map(h => h.replace(/["\r]/g, '').trim());
             
             rawDatabase = [];
             for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
+                let line = lines[i].trim();
+                if (!line) continue;
                 
-                // Regex untuk menangani pembahagi comma yang berada di dalam string bertanda petak
-                let matches = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-                let rowValues = matches.map(v => v.replace(/["\r]/g, '').trim());
+                let rowValues = [];
+                let insideQuote = false;
+                let entry = '';
                 
-                if (rowValues.length < headers.length) continue;
+                for (let j = 0; j < line.length; j++) {
+                    let char = line[j];
+                    if (char === '"') {
+                        insideQuote = !insideQuote;
+                    } else if (char === ',' && !insideQuote) {
+                        rowValues.push(entry.trim());
+                        entry = '';
+                    } else {
+                        entry += char;
+                    }
+                }
+                rowValues.push(entry.trim());
+                
+                // Sahkan jumlah minimum lajur (A hingga V = 22 kolum)
+                if (rowValues.length < 22) continue;
+
+                rowValues = rowValues.map(v => v.replace(/^"|"$/g, '').trim());
 
                 let rowObj = {
-                    timestamp: new Date(rowValues[0]),
-                    // Menetap kedudukan kolum berasaskan penerangan pengguna
-                    umur: parseFloat(rowValues[1]) || 0, // Andaian Kolum B = Umur
-                    jantina: rowValues[2] || 'Tiada Maklumat', // Kolum C
-                    bangsa: rowValues[3] || 'Tiada Maklumat', // Kolum D
-                    agama: rowValues[4] || 'Tiada Maklumat', // Kolum E
-                    pendidikan: rowValues[5] || 'Tiada Maklumat', // Kolum F
-                    pekerjaan: rowValues[6] || 'Tiada Maklumat', // Kolum G
-                    // Andaian STIG item 1-9 berturut dalam kolum H (Ke-7) hingga P (Ke-15)
+                    timestamp: new Date(rowValues[0]),            // Kolum A (Index 0)
+                    jantina: rowValues[2] || 'Tiada Maklumat',      // Kolum C (Index 2)
+                    umur: parseFloat(rowValues[3]) || 0,            // Kolum D (Index 3)
+                    bangsa: rowValues[4] || 'Tiada Maklumat',       // Kolum E (Index 4)
+                    agama: rowValues[5] || 'Tiada Maklumat',        // Kolum F (Index 5)
+                    pendidikan: rowValues[6] || 'Tiada Maklumat',   // Kolum G (Index 6)
+                    pekerjaan: rowValues[7] || 'Tiada Maklumat',    // Kolum H (Index 7)
+                    daerah: rowValues[9] || 'Luar Daerah',          // Kolum J (Index 9)
+                    program: rowValues[10] || 'Umum',               // Kolum K (Index 10)
+                    
+                    // Item Q1 - Q9 bermula dari Kolum N (Index 13) hingga Kolum V (Index 21)
                     items: [
-                        parseInt(rowValues[7]) || 1,
-                        parseInt(rowValues[8]) || 1,
-                        parseInt(rowValues[9]) || 1,
-                        parseInt(rowValues[10]) || 1,
-                        parseInt(rowValues[11]) || 1,
-                        parseInt(rowValues[12]) || 1,
-                        parseInt(rowValues[13]) || 1,
-                        parseInt(rowValues[14]) || 1,
-                        parseInt(rowValues[15]) || 1
-                    ],
-                    daerah: rowValues[9] || 'Luar Daerah', // Kolum J (Indeks 9 jika bermula 0)
-                    program: rowValues[10] || 'Umum' // Kolum K (Indeks 10 jika bermula 0)
+                        parseInt(rowValues[13]) || 1, // Q1
+                        parseInt(rowValues[14]) || 1, // Q2
+                        parseInt(rowValues[15]) || 1, // Q3
+                        parseInt(rowValues[16]) || 1, // Q4
+                        parseInt(rowValues[17]) || 1, // Q5
+                        parseInt(rowValues[18]) || 1, // Q6
+                        parseInt(rowValues[19]) || 1, // Q7
+                        parseInt(rowValues[20]) || 1, // Q8
+                        parseInt(rowValues[21]) || 1  // Q9
+                    ]
                 };
-
-                // Betulkan pemetaan spesifik Kolum J dan K mengikut susunan sebenar csv array jika berbeza
-                // Untuk keselamatan, di bawah diselaraskan mengikut kenyataan pengguna:
-                if(rowValues.length > 10) {
-                     rowObj.daerah = rowValues[9]; // Kolum J (Elemen ke-10)
-                     rowObj.program = rowValues[10]; // Kolum K (Elemen ke-11)
-                }
 
                 rawDatabase.push(rowObj);
             }
         }
 
         function initializeFilters() {
-            const daerahs = [...new Set(rawDatabase.map(d => d.daerah))];
-            const programs = [...new Set(rawDatabase.map(d => d.program))];
+            const daerahs = [...new Set(rawDatabase.map(d => d.daerah))].filter(Boolean);
+            const programs = [...new Set(rawDatabase.map(d => d.program))].filter(Boolean);
 
             const selDaerah = document.getElementById('filter-daerah');
             const selProgram = document.getElementById('filter-program');
 
-            daerahs.forEach(d => { if(d) selDaerah.add(new Option(d, d)) });
-            programs.forEach(p => { if(p) selProgram.add(new Option(p, p)) });
+            daerahs.forEach(d => selDaerah.add(new Option(d, d)));
+            programs.forEach(p => selProgram.add(new Option(p, p)));
 
-            // Event Listeners
             document.getElementById('filter-start-date').addEventListener('change', applyFilters);
             document.getElementById('filter-end-date').addEventListener('change', applyFilters);
             selDaerah.addEventListener('change', applyFilters);
@@ -316,7 +322,6 @@
                 applyFilters();
             });
 
-            // Inferensi Dropdown Event
             document.getElementById('inferensi-variable').addEventListener('change', updateInferensiGroupDropdown);
             document.getElementById('btn-kira-inferensi').addEventListener('click', runInferensiTest);
         }
@@ -347,23 +352,23 @@
                 return;
             }
 
-            // 1. STATISTIK ASAS UMUR
-            const ages = filteredDatabase.map(r => r.umur);
-            const meanAge = ages.reduce((a,b)=>a+b, 0) / N;
-            const sdAge = Math.sqrt(ages.map(x => Math.pow(x - meanAge, 2)).reduce((a, b) => a + b, 0) / (N > 1 ? N - 1 : 1));
+            // 1. STATISTIK UMUR
+            const ages = filteredDatabase.map(r => r.umur).filter(v => !isNaN(v) && v > 0);
+            const meanAge = ages.length ? (ages.reduce((a,b)=>a+b, 0) / ages.length) : 0;
+            const sdAge = ages.length > 1 ? Math.sqrt(ages.map(x => Math.pow(x - meanAge, 2)).reduce((a, b) => a + b, 0) / (ages.length - 1)) : 0;
             
             document.getElementById('kpi-mean-age').innerText = meanAge.toFixed(1);
             document.getElementById('kpi-sd-age').innerText = sdAge.toFixed(1);
 
-            // 2. SKOR DIMENSI STIG-9
+            // 2. SKOR DIMENSI STIG-9 (SOP AKADEMIK)
             let totalStigKeseluruhan = 0;
             let dAfektif = 0, dKognitif = 0, dTingkahLaku = 0;
 
             filteredDatabase.forEach(row => {
                 const s = row.items;
-                const scoreAfektif = (s[0] + s[8]) / 2;          // Item 1 & 9
-                const scoreKognitif = (s[4] + s[5] + s[7]) / 3;   // Item 5, 6 & 8
-                const scoreTingkah = (s[1] + s[2] + s[3] + s[6]) / 4; // Item 2, 3, 4 & 7
+                const scoreAfektif = (s[0] + s[8]) / 2;               // Item 1 & 9
+                const scoreKognitif = (s[4] + s[5] + s[7]) / 3;        // Item 5, 6 & 8
+                const scoreTingkah = (s[1] + s[2] + s[3] + s[6]) / 4;  // Item 2, 3, 4 & 7
                 const scoreTotal = s.reduce((a,b)=>a+b,0) / 9;
 
                 dAfektif += scoreAfektif;
@@ -380,17 +385,10 @@
             document.getElementById('kpi-mean-stig').innerText = meanTotalStig.toFixed(2);
             interpretasiSkorBadge(meanTotalStig, 'kpi-interpretasi-stig');
 
-            // 3. UPDATE CARTA DEMOGRAFI
             renderDemografiCharts();
-
-            // 4. UPDATE CARTA DIMENSI & RUMUSAN CARD
             renderDimensiChart(avgAfektif, avgKognitif, avgTingkahLaku);
             renderRumusanDimensiList(avgAfektif, avgKognitif, avgTingkahLaku);
-
-            // 5. JADUAL ANALISA DESKRIPTIF ITEM
             renderJadualDeskriptif();
-
-            // 6. UPDATE DROPDOWN INFERENSI
             updateInferensiGroupDropdown();
         }
 
@@ -410,27 +408,23 @@
             return "Sangat Tinggi (Ekstrem/Diskriminasi)";
         }
 
-        // FUNGSI PENGIRAAN STATISTIK DESKRIPTIF
         function dapatkanStatistikItem(itemIndex) {
             const skorSemua = filteredDatabase.map(r => r.items[itemIndex]);
             const N = skorSemua.length;
             
-            // Mean & SD
             const mean = skorSemua.reduce((a,b)=>a+b,0) / N;
             const sd = Math.sqrt(skorSemua.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b, 0) / (N > 1 ? N - 1 : 1));
             
-            // Median & IQR
             skorSemua.sort((a,b)=>a-b);
             const median = hitungMedian(skorSemua);
             const q1 = hitungMedian(skorSemua.slice(0, Math.floor(N/2)));
             const q2 = hitungMedian(skorSemua.slice(Math.ceil(N/2)));
             const iqr = q2 - q1;
 
-            // Skewness (Pearson's coefficient / Momen skewness)
             let skewness = 0;
             if(sd > 0) {
                 const kubikDiff = skorSemua.map(x => Math.pow((x - mean)/sd, 3)).reduce((a,b)=>a+b,0);
-                skewness = (N / ((N - 1) * (N - 2))) * kubikDiff; // Sampel skewness
+                skewness = (N / ((N - 1) * (N - 2))) * kubikDiff;
                 if (isNaN(skewness)) skewness = 0;
             }
 
@@ -462,7 +456,6 @@
             });
         }
 
-        // PENJANAAN CARTA-CARTA VISUALISASI (CHART.JS)
         function renderDemografiCharts() {
             const ciri = ['jantina', 'bangsa', 'agama', 'pendidikan', 'pekerjaan'];
             
@@ -505,7 +498,6 @@
                         label: 'Skor Purata Dimensi',
                         data: [afektif, kognitif, tingkah],
                         backgroundColor: ['#3b82f6', '#8b5cf6', '#0d9488'],
-                        borderWidth: 0,
                         borderRadius: 6
                     }]
                 },
@@ -540,14 +532,13 @@
             });
         }
 
-        // ANALISIS INFERENSI (DYNAMIC T-TEST SIMULATION)
         function updateInferensiGroupDropdown() {
             const v = document.getElementById('inferensi-variable').value;
-            const kumpUnik = [...new Set(filteredDatabase.map(r => r[v]))];
+            const kumpUnik = [...new Set(filteredDatabase.map(r => r[v]))].filter(Boolean);
             const selKump1 = document.getElementById('inferensi-group1');
             
             selKump1.innerHTML = '';
-            kumpUnik.forEach(k => { if(k) selKump1.add(new Option(k, k)) });
+            kumpUnik.forEach(k => selKump1.add(new Option(k, k)));
         }
 
         function runInferensiTest() {
@@ -564,7 +555,7 @@
             tbody.innerHTML = '';
 
             if (kump1Data.length < 2 || kump2Data.length < 2) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-xs text-red-500 font-medium">Data tidak mencukupi untuk menjalankan analisis perbandingan statistik (Minimum 2 sampel per kumpulan).</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-xs text-red-500 font-medium">Data tidak mencukupi untuk analisis statistik (Minimum 2 sampel diperlukan bagi setiap kumpulan).</td></tr>`;
                 return;
             }
 
@@ -581,7 +572,6 @@
                 const stat1 = hitungMeanSD(s1);
                 const stat2 = hitungMeanSD(s2);
 
-                // Simulasi Pengiraan Nilai-p (Welch's T-Test Approximation)
                 const pValue = tTestWelch(s1, s2);
                 const signifikansi = pValue < 0.05 ? '<span class="text-green-600 font-bold">Signifikan (*)</span>' : '<span class="text-gray-400">Tidak Signifikan</span>';
 
@@ -604,7 +594,6 @@
             return { mean, sd };
         }
 
-        // Formulasi Pengiraan P-Value Welch T-Test Matematik
         function tTestWelch(sample1, sample2) {
             const s1 = hitungMeanSD(sample1);
             const s2 = hitungMeanSD(sample2);
@@ -617,28 +606,25 @@
             const t = (s1.mean - s2.mean) / Math.sqrt((v1 / n1) + (v2 / n2));
             if(isNaN(t)) return 1.0;
 
-            // Pengiraan darjah kebebasan (df)
             const dfNumer = Math.pow((v1/n1) + (v2/n2), 2);
             const dfDenom = (Math.pow(v1/n1, 2) / (n1 - 1)) + (Math.pow(v2/n2, 2) / (n2 - 1));
             const df = dfNumer / dfDenom;
 
-            // Anggaran t-distribution p-value (Pendekatan fungsi Sigmoid/Normal Alternatif untuk Client-side JS)
             const z = Math.abs(t);
             const p = 2 * (1 - (1 / (1 + Math.exp(-0.717 * z - 0.416 * Math.pow(z, 2)))));
             return Math.min(Math.max(p, 0.0001), 1.0);
         }
 
-        // JANA RUMUSAN HEURISTIK AI (MENGGUNAKAN ATURAN KLINIKAL / STATISTIK)
+        // PENJANA RUMUSAN AI BERASASKAN ATURAN HEURISTIK
         document.getElementById('btn-jana-ai').addEventListener('click', () => {
             const outputBox = document.getElementById('ai-output-box');
-            outputBox.innerHTML = `<div class="text-center"><i class="fa-solid fa-sync animate-spin text-teal-400 mr-2"></i> Menganalisis korelasi, taburan serta impak psikososial...</div>`;
+            outputBox.innerHTML = `<div class="text-center"><i class="fa-solid fa-sync animate-spin text-teal-400 mr-2"></i> Menganalisis korelasi dan taburan data klinikal...</div>`;
 
             setTimeout(() => {
                 const N = filteredDatabase.length;
                 const totalSkor = parseFloat(document.getElementById('kpi-mean-stig').innerText);
                 let tahapText = getInterpretasiTeks(totalSkor);
                 
-                // Cari item tertinggi
                 let tertinggiSkor = 0; let tertinggiIndex = 0;
                 for(let i=0; i<9; i++) {
                     let st = dapatkanStatistikItem(i);
@@ -659,7 +645,7 @@
                         <p><strong class="text-teal-400"><i class="fa-solid fa-user-doctor mr-1"></i> Implikasi Kesihatan Awam & Cadangan:</strong> ${cadanganKlinikal}</p>
                     </div>
                 `;
-            }, 1200);
+            }, 1000);
         });
 
         function resetToZeroUI() {
@@ -667,7 +653,7 @@
             document.getElementById('kpi-mean-age').innerText = '0.0';
             document.getElementById('kpi-sd-age').innerText = '0.0';
             document.getElementById('kpi-mean-stig').innerText = '0.00';
-            document.getElementById('table-deskriptif-body').innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">Tiada data padan dengan penapis aktif.</td></tr>`;
+            document.getElementById('table-deskriptif-body').innerHTML = `<tr><td colspan="5" class="text-center p-4 text-gray-400">Tiada data sepadan dengan penapis aktif.</td></tr>`;
         }
     </script>
 </body>
