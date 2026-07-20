@@ -180,35 +180,30 @@
         let raw = []; let filteredData = []; let charts = {}; let zoomChartRef = null;
         Chart.register(ChartDataLabels);
 
-        // KEMASKINI PENAPIS TARIKH: Memastikan penukaran format tarikh dari pelbagai format Google Sheets adalah tepat
+        // MEMPERBAIKI PENAPIS: Ekstrak tarikh asal dengan selamat & neutral zon masa (Set jam ke 00:00:00)
         function parseSpreadsheetDate(dateStr) {
             if (!dateStr) return new Date(NaN);
-            
-            // Buang sebarang rentetan teks zon masa tambahan jika wujud
             let cleanStr = dateStr.toString().trim();
             
-            // Cuba parsing cara standard dahulu
+            // Format standard ISO
             let parsed = new Date(cleanStr);
-            if (!isNaN(parsed.getTime())) return parsed;
+            if (!isNaN(parsed.getTime())) {
+                parsed.setHours(0,0,0,0);
+                return parsed;
+            }
 
-            // Logik manual untuk format tipikal Google Sheets: DD/MM/YYYY HH:mm:ss atau DD-MM-YYYY
+            // Pecahkan format DD/MM/YYYY
             const dateTimeParts = cleanStr.split(' ');
             const dateParts = dateTimeParts[0].split(/[-/]/);
             
             if (dateParts.length === 3) {
                 const day = parseInt(dateParts[0], 10);
-                const month = parseInt(dateParts[1], 10) - 1; // Bulan berasaskan 0 index di JS
+                const month = parseInt(dateParts[1], 10) - 1;
                 let year = parseInt(dateParts[2], 10);
-                if (year < 100) year += 2000; // Pembetulan jika format YY
+                if (year < 100) year += 2000;
                 
-                let hours = 0, minutes = 0, seconds = 0;
-                if (dateTimeParts[1]) {
-                    const timeParts = dateTimeParts[1].split(':');
-                    hours = parseInt(timeParts[0], 10) || 0;
-                    minutes = parseInt(timeParts[1], 10) || 0;
-                    seconds = parseInt(timeParts[2], 10) || 0;
-                }
-                return new Date(year, month, day, hours, minutes, seconds);
+                // Cipta objek tarikh tulen waktu tempatan tanpa kesan ralat masa jam
+                return new Date(year, month, day, 0, 0, 0, 0);
             }
             return new Date(NaN);
         }
@@ -245,7 +240,7 @@
                 }).filter(d => !isNaN(d.DateParsed.getTime()));
 
                 if (raw.length === 0) {
-                    alert("Tiada data ditemui.\nSila pastikan lajur (timestamp, umur, jantina, dsb) disediakan dalam format yang betul.");
+                    alert("Tiada data ditemui.\nSila pastikan lajur disediakan dalam format yang betul.");
                 } else {
                     setupFilters(); populateSubGroups(); updateDashboard();
                     document.getElementById('updateTime').innerText = `Update (${source}): ${new Date().toLocaleTimeString('ms-MY')}`;
@@ -308,7 +303,6 @@
             if(raw.length > 0) {
                 const timestamps = raw.map(d => d.DateParsed.getTime()).filter(t => !isNaN(t));
                 if(timestamps.length > 0) {
-                    // Penukaran tarikh had min/max ke format YYYY-MM-DD mengikut waktu tempatan zon masa
                     const toLocalDateString = (ts) => {
                         const d = new Date(ts);
                         const yyyy = d.getFullYear();
@@ -333,15 +327,7 @@
             }
         }
 
-        function populateSubGroups() {
-            const cat = document.getElementById('inferCat').value;
-            const sel = document.getElementById('inferSub');
-            const vals = [...new Set(raw.map(d => d[cat]))].filter(Boolean).sort();
-            sel.innerHTML = `<option value="">Pilih Kumpulan 1</option>`;
-            vals.forEach(v => sel.innerHTML += `<option value="${v}">${v}</option>`);
-        }
-
-        // KEMASKINI PENAPISAN: Tetapan waktu sempadan tarikh (Zon Masa Tempatan) bagi mengelakkan data tercicir
+        // KEMASKINI LOGIK UTAMA: Membandingkan Nilai 'Hari Berasingan' tanpa ralat jam/zon masa
         function updateDashboard() {
             const startDateVal = document.getElementById('fStartDate').value;
             const endDateVal = document.getElementById('fEndDate').value;
@@ -355,7 +341,7 @@
             }
             if (endDateVal) {
                 const p = endDateVal.split('-');
-                endFilter = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 23, 59, 59, 999);
+                endFilter = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 0, 0, 0, 0);
             }
 
             filteredData = raw.filter(d => {
@@ -363,6 +349,7 @@
                 
                 ok = ok && (document.getElementById('fJantina').value === 'All' || d[colMap.jantina] === document.getElementById('fJantina').value) && (document.getElementById('fUmurGroup').value === 'All' || d.UmurGroup === document.getElementById('fUmurGroup').value) && (document.getElementById('fBangsa').value === 'All' || d[colMap.bangsa] === document.getElementById('fBangsa').value) && (document.getElementById('fAgama').value === 'All' || d[colMap.agama] === document.getElementById('fAgama').value) && (document.getElementById('fPendidikan').value === 'All' || d[colMap.pendidikan] === document.getElementById('fPendidikan').value) && (document.getElementById('fPekerjaan').value === 'All' || d[colMap.pekerjaan] === document.getElementById('fPekerjaan').value);
                 
+                // Banding nilai masa bersandarkan tarikh asas yang bersih
                 if(startFilter) { ok = ok && (d.DateParsed.getTime() >= startFilter.getTime()); }
                 if(endFilter) { ok = ok && (d.DateParsed.getTime() <= endFilter.getTime()); }
                 
@@ -514,7 +501,6 @@
             });
         }
 
-        // KEMASKINI MATEMATIK SEBENAR: Menggantikan fungsi Math.random() dengan pengiraan Ujian-t Dua Sampel (Independent t-test) tulen melalui jStat
         function calculateTTestPValue(sample1, sample2) {
             const n1 = sample1.length;
             const n2 = sample2.length;
@@ -525,14 +511,12 @@
             const var1 = jStat.variance(sample1);
             const var2 = jStat.variance(sample2);
 
-            // Pengiraan t-value menggunakan formula perbezaan min / ralat piawai (pooled variance)
             const pooledVar = ((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2);
             if (pooledVar === 0) return 1.0;
 
             const tStat = (mean1 - mean2) / Math.sqrt(pooledVar * (1 / n1 + 1 / n2));
             const df = n1 + n2 - 2;
 
-            // Dapatkan p-value dwi-hujung (two-tailed p-value) daripada taburan-t
             const pVal = 2 * (1 - jStat.studentt.cdf(Math.abs(tStat), df));
             return isNaN(pVal) ? 1.0 : pVal;
         }
@@ -553,8 +537,6 @@
                 }
                 
                 const isN = Math.abs(jStat.skewness([...s1, ...s2])) <= 1;
-                
-                // PENGIRAAN TULEN: Menghitung p-value saintifik sebenar berasaskan data saringan sedia ada
                 const p = calculateTTestPValue(s1, s2);
                 
                 tbody.innerHTML += `<tr><td class="p-6 font-bold">${dm}</td><td class="p-6 text-center">${isN?jStat.mean(s1).toFixed(2):jStat.median(s1).toFixed(2)}</td><td class="p-6 text-center">${isN?jStat.mean(s2).toFixed(2):jStat.median(s2).toFixed(2)}</td><td class="p-6 text-center text-[10px] text-slate-400 uppercase">${isN?'t-test':'t-test'}</td><td class="p-6 text-center font-bold ${p<0.05?'p-sig':''}">${p.toFixed(3)}</td></tr>`;
